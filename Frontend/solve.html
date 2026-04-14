@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart City Analytic System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#03030f;
+  --s1:#080818;
+  --s2:#0e0e28;
+  --glass:rgba(255,255,255,0.04);
+  --glass2:rgba(255,255,255,0.07);
+  --b1:rgba(255,255,255,0.07);
+  --b2:rgba(255,255,255,0.12);
+  --c:var(--cyan);
+  --cyan:#22d3ee;
+  --violet:#a78bfa;
+  --emerald:#34d399;
+  --rose:#fb7185;
+  --amber:#fbbf24;
+  --text:#f0f0ff;
+  --muted:rgba(200,200,240,0.45);
+  --font:'Syne',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+  --nav:260px;
+}
+html,body{height:100%;overflow:hidden;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;}
+
+/* CANVAS BG */
+#particles{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+/* SIDEBAR */
+.sidebar{
+  width:var(--nav);min-width:var(--nav);
+  height:100vh;
+  background:var(--glass);
+  border-right:1px solid var(--b1);
+  display:flex;flex-direction:column;
+  z-index:10;
+  position:relative;
+  backdrop-filter:blur(24px);
+}
+.sidebar-top{
+  padding:28px 24px 20px;
+  border-bottom:1px solid var(--b1);
+}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-icon{
+  width:40px;height:40px;
+  background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(167,139,250,0.2));
+  border:1px solid rgba(34,211,238,0.3);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;color:var(--cyan);
+}
+.brand-name{
+  font-family:var(--mono);font-size:.85rem;font-weight:600;
+  letter-spacing:.1em;
+  background:linear-gradient(90deg,var(--cyan),var(--violet));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.brand-sub{font-size:.6rem;color:var(--muted);letter-spacing:.12em;margin-top:1px;}
+
+/* STATUS */
+.status-bar{
+  margin:16px 24px 0;
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;
+  background:rgba(52,211,153,0.06);
+  border:1px solid rgba(52,211,153,0.15);
+  border-radius:8px;
+}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--emerald);animation:blink 2s infinite;}
+.pulse.off{background:var(--rose);animation:none;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+.status-text{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;color:rgba(52,211,153,.8);}
+
+/* NAV LINKS */
+.nav{flex:1;padding:20px 16px;display:flex;flex-direction:column;gap:4px;overflow-y:auto;}
+.nav-section-label{
+  font-size:.55rem;letter-spacing:.2em;color:var(--muted);
+  text-transform:uppercase;padding:12px 8px 6px;font-family:var(--mono);
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:background .2s,border-color .2s;
+  border:1px solid transparent;
+  font-size:.82rem;font-weight:500;
+  color:var(--muted);
+}
+.nav-item:hover{background:var(--glass2);color:var(--text);}
+.nav-item.active{
+  background:var(--glass2);
+  border-color:var(--b2);
+  color:var(--text);
+}
+.nav-item i{font-size:14px;width:16px;text-align:center;}
+.nav-item.active i,.nav-item:hover i{color:var(--cyan);}
+.nav-dot{
+  margin-left:auto;width:6px;height:6px;border-radius:50%;
+}
+.house-dot{background:var(--cyan);}
+.traffic-dot{background:var(--emerald);}
+.crime-dot{background:var(--rose);}
+.citizen-dot{background:var(--violet);}
+
+/* SIDEBAR BOTTOM */
+.sidebar-bottom{
+  padding:16px;border-top:1px solid var(--b1);
+}
+.server-pill{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;
+  background:var(--glass);border:1px solid var(--b1);
+  border-radius:8px;font-family:var(--mono);font-size:.62rem;color:var(--muted);
+}
+.server-pill i{color:var(--violet);font-size:11px;}
+
+/* MAIN */
+.main{
+  flex:1;height:100vh;overflow-y:auto;
+  display:flex;flex-direction:column;
+  position:relative;z-index:5;
+}
+.main::-webkit-scrollbar{width:4px;}
+.main::-webkit-scrollbar-track{background:transparent;}
+.main::-webkit-scrollbar-thumb{background:var(--b2);border-radius:4px;}
+
+/* TOP BAR */
+.topbar{
+  position:sticky;top:0;z-index:20;
+  padding:16px 32px;
+  background:rgba(3,3,15,0.8);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--b1);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.page-title{font-size:1.1rem;font-weight:700;letter-spacing:.02em;}
+.page-sub{font-size:.7rem;color:var(--muted);margin-top:2px;font-family:var(--mono);}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.stat-pill{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 14px;
+  background:var(--glass);border:1px solid var(--b1);
+  border-radius:100px;font-family:var(--mono);font-size:.65rem;
+}
+.stat-pill .val{font-weight:600;}
+.stat-pill.c-cyan .val{color:var(--cyan);}
+.stat-pill.c-violet .val{color:var(--violet);}
+.stat-pill.c-emerald .val{color:var(--emerald);}
+
+/* CONTENT AREA */
+.content{padding:28px 32px;flex:1;}
+
+/* PANELS */
+.panel{
+  display:none;
+  animation:fadeUp .3s ease;
+}
+.panel.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;}}
+
+/* MODEL CARD */
+.model-wrap{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:20px;margin-bottom:24px;
+}
+.card{
+  background:var(--glass);
+  border:1px solid var(--b1);
+  border-radius:18px;
+  overflow:hidden;
+  transition:border-color .25s,transform .25s;
+}
+.card:hover{border-color:var(--b2);transform:translateY(-3px);}
+
+.card-header{
+  padding:18px 22px;
+  border-bottom:1px solid var(--b1);
+  display:flex;align-items:center;justify-content:space-between;
+  position:relative;overflow:hidden;
+}
+.card-header::before{
+  content:'';position:absolute;inset:0;
+  opacity:.04;
+}
+.card.house .card-header::before{background:radial-gradient(circle at 80% 50%,var(--cyan),transparent);}
+.card.traffic .card-header::before{background:radial-gradient(circle at 80% 50%,var(--emerald),transparent);}
+.card.crime .card-header::before{background:radial-gradient(circle at 80% 50%,var(--rose),transparent);}
+.card.citizen .card-header::before{background:radial-gradient(circle at 80% 50%,var(--violet),transparent);}
+
+.card-icon{
+  width:38px;height:38px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;margin-right:12px;flex-shrink:0;
+}
+.house .card-icon{background:rgba(34,211,238,.12);color:var(--cyan);}
+.traffic .card-icon{background:rgba(52,211,153,.12);color:var(--emerald);}
+.crime .card-icon{background:rgba(251,113,133,.12);color:var(--rose);}
+.citizen .card-icon{background:rgba(167,139,250,.12);color:var(--violet);}
+
+.card-title-wrap{display:flex;align-items:center;}
+.card-name{font-size:.82rem;font-weight:700;letter-spacing:.04em;}
+.card-sub{font-size:.6rem;color:var(--muted);margin-top:2px;font-family:var(--mono);letter-spacing:.05em;}
+.badge{
+  font-family:var(--mono);font-size:.6rem;font-weight:600;
+  padding:4px 10px;border-radius:100px;letter-spacing:.05em;
+}
+.house .badge{background:rgba(34,211,238,.1);color:var(--cyan);border:1px solid rgba(34,211,238,.25);}
+.traffic .badge{background:rgba(52,211,153,.1);color:var(--emerald);border:1px solid rgba(52,211,153,.25);}
+.crime .badge{background:rgba(251,113,133,.1);color:var(--rose);border:1px solid rgba(251,113,133,.25);}
+.citizen .badge{background:rgba(167,139,250,.1);color:var(--violet);border:1px solid rgba(167,139,250,.25);}
+
+.card-body{padding:20px 22px;}
+.fg{display:grid;gap:12px;margin-bottom:16px;}
+.fg2{grid-template-columns:1fr 1fr;}
+.fg3{grid-template-columns:1fr 1fr 1fr;}
+.fg1{grid-template-columns:1fr;}
+
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{
+  font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);font-family:var(--mono);
+}
+.field input,.field select{
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--b1);
+  border-radius:8px;
+  padding:9px 12px;
+  color:var(--text);font-family:var(--font);font-size:.82rem;
+  outline:none;transition:border-color .2s,background .2s;
+  appearance:none;-webkit-appearance:none;
+}
+.field input:focus,.field select:focus{
+  border-color:rgba(34,211,238,.4);
+  background:rgba(34,211,238,.03);
+}
+.field input::placeholder{color:rgba(200,200,240,.2);}
+.field select option{background:#0e0e28;color:var(--text);}
+
+.btn{
+  width:100%;padding:12px;
+  border:none;border-radius:10px;
+  font-family:var(--mono);font-size:.7rem;font-weight:600;
+  letter-spacing:.12em;cursor:pointer;
+  transition:opacity .2s,transform .15s;
+  text-transform:uppercase;
+}
+.btn:hover{opacity:.9;}
+.btn:active{transform:scale(.99);}
+.house .btn{background:linear-gradient(90deg,#0891b2,#22d3ee);color:#001a20;}
+.traffic .btn{background:linear-gradient(90deg,#059669,#34d399);color:#001a10;}
+.crime .btn{background:linear-gradient(90deg,#be123c,#fb7185);color:#fff;}
+.citizen .btn{background:linear-gradient(90deg,#7c3aed,#a78bfa);color:#fff;}
+.btn-default{
+  width:100%;padding:9px;
+  border-radius:10px;
+  font-family:var(--mono);font-size:.65rem;font-weight:600;
+  letter-spacing:.1em;cursor:pointer;
+  transition:all .2s;
+  text-transform:uppercase;
+  background:transparent;
+  margin-bottom:10px;
+}
+.btn-default:hover{background:rgba(255,255,255,.05);}
+.btn-default:active{transform:scale(.99);}
+.house .btn-default{border:1px solid rgba(34,211,238,.3);color:var(--cyan);}
+.traffic .btn-default{border:1px solid rgba(52,211,153,.3);color:var(--emerald);}
+.crime .btn-default{border:1px solid rgba(251,113,133,.3);color:var(--rose);}
+.citizen .btn-default{border:1px solid rgba(167,139,250,.3);color:var(--violet);}
+
+.result{
+  display:none;margin-top:12px;
+  padding:12px 16px;border-radius:10px;
+  font-family:var(--mono);font-size:.72rem;
+  font-weight:500;text-align:center;letter-spacing:.06em;
+  animation:fadeUp .25s ease;
+}
+.result.ok{
+  display:block;
+  background:rgba(52,211,153,.07);
+  border:1px solid rgba(52,211,153,.25);
+  color:var(--emerald);
+}
+.result.err{
+  display:block;
+  background:rgba(251,113,133,.07);
+  border:1px solid rgba(251,113,133,.25);
+  color:var(--rose);
+}
+.result.busy{
+  display:block;
+  background:rgba(34,211,238,.05);
+  border:1px solid var(--b1);
+  color:var(--muted);
+}
+
+/* OVERVIEW / HOME PANEL */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+.kpi{
+  padding:22px 20px;
+  background:var(--glass);
+  border:1px solid var(--b1);
+  border-radius:16px;
+  position:relative;overflow:hidden;
+  transition:border-color .2s,transform .2s;
+}
+.kpi:hover{border-color:var(--b2);transform:translateY(-2px);}
+.kpi::after{
+  content:'';position:absolute;
+  bottom:0;left:0;right:0;height:2px;
+}
+.kpi:nth-child(1)::after{background:var(--cyan);}
+.kpi:nth-child(2)::after{background:var(--emerald);}
+.kpi:nth-child(3)::after{background:var(--violet);}
+.kpi:nth-child(4)::after{background:var(--amber);}
+.kpi-label{font-size:.6rem;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;font-family:var(--mono);}
+.kpi-val{font-family:var(--mono);font-size:2rem;font-weight:700;line-height:1;margin:8px 0 4px;}
+.kpi:nth-child(1) .kpi-val{color:var(--cyan);}
+.kpi:nth-child(2) .kpi-val{color:var(--emerald);}
+.kpi:nth-child(3) .kpi-val{color:var(--violet);}
+.kpi:nth-child(4) .kpi-val{color:var(--amber);}
+.kpi-sub{font-size:.65rem;color:var(--muted);}
+
+/* MODULE CARDS ON OVERVIEW */
+.module-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+.mod-card{
+  padding:20px 22px;
+  background:var(--glass);border:1px solid var(--b1);
+  border-radius:16px;cursor:pointer;
+  transition:all .2s;display:flex;align-items:center;gap:16px;
+}
+.mod-card:hover{border-color:var(--b2);background:var(--glass2);transform:translateY(-2px);}
+.mod-ico{
+  width:48px;height:48px;border-radius:12px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.mod-ico.c{background:rgba(34,211,238,.12);color:var(--cyan);}
+.mod-ico.e{background:rgba(52,211,153,.12);color:var(--emerald);}
+.mod-ico.r{background:rgba(251,113,133,.12);color:var(--rose);}
+.mod-ico.v{background:rgba(167,139,250,.12);color:var(--violet);}
+.mod-name{font-size:.85rem;font-weight:700;margin-bottom:4px;}
+.mod-desc{font-size:.7rem;color:var(--muted);line-height:1.4;}
+.mod-acc{
+  margin-left:auto;font-family:var(--mono);font-size:.65rem;
+  padding:4px 10px;border-radius:100px;flex-shrink:0;
+}
+.mod-acc.c{background:rgba(34,211,238,.1);color:var(--cyan);border:1px solid rgba(34,211,238,.2);}
+.mod-acc.e{background:rgba(52,211,153,.1);color:var(--emerald);border:1px solid rgba(52,211,153,.2);}
+.mod-acc.r{background:rgba(251,113,133,.1);color:var(--rose);border:1px solid rgba(251,113,133,.2);}
+.mod-acc.v{background:rgba(167,139,250,.1);color:var(--violet);border:1px solid rgba(167,139,250,.2);}
+
+/* TEAM PANEL */
+.team-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+.tm{
+  padding:16px 12px;text-align:center;
+  background:var(--glass);border:1px solid var(--b1);
+  border-radius:14px;transition:all .2s;
+}
+.tm:hover{border-color:var(--b2);transform:translateY(-2px);}
+.tm.lead{border-color:rgba(167,139,250,.3);background:rgba(167,139,250,.04);}
+.av{
+  width:40px;height:40px;border-radius:50%;
+  margin:0 auto 10px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:.7rem;font-weight:700;
+}
+.av.c{background:rgba(34,211,238,.15);color:var(--cyan);}
+.av.v{background:rgba(167,139,250,.15);color:var(--violet);}
+.av.e{background:rgba(52,211,153,.15);color:var(--emerald);}
+.av.a{background:rgba(251,191,36,.15);color:var(--amber);}
+.tm-name{font-size:.72rem;font-weight:600;line-height:1.3;}
+.tm-roll{font-size:.58rem;color:var(--muted);font-family:var(--mono);margin-top:3px;}
+.tm-badge{
+  display:inline-block;margin-top:5px;
+  font-size:.52rem;padding:2px 8px;border-radius:100px;
+  background:rgba(167,139,250,.15);color:var(--violet);
+  font-family:var(--mono);letter-spacing:.08em;
+}
+
+/* Scrollable content area */
+.panel-scroll{max-height:calc(100vh - 130px);overflow-y:auto;padding-bottom:32px;}
+.panel-scroll::-webkit-scrollbar{width:3px;}
+.panel-scroll::-webkit-scrollbar-thumb{background:var(--b2);border-radius:4px;}
+
+/* Section heading */
+.section-head{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:20px;padding-bottom:12px;
+  border-bottom:1px solid var(--b1);
+}
+.section-head h2{font-size:1rem;font-weight:700;letter-spacing:.03em;}
+.section-head span{font-size:.65rem;color:var(--muted);font-family:var(--mono);}
+
+@media(max-width:1100px){
+  :root{--nav:72px;}
+  .brand-name,.brand-sub,.nav-item span,.status-bar,.server-pill span,.nav-section-label{display:none;}
+  .nav-item{justify-content:center;padding:12px;}
+  .nav-dot{display:none;}
+  .sidebar-top{padding:20px 14px;}
+  .brand{justify-content:center;}
+}
+@media(max-width:700px){
+  .kpi-row,.model-wrap,.module-grid,.team-grid{grid-template-columns:1fr 1fr;}
+  .fg3{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+<canvas id="particles"></canvas>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-top">
+    <div class="brand">
+      <div class="brand-icon"><i class="fas fa-microchip"></i></div>
+      <div>
+        <div class="brand-name">SMART CITY</div>
+        <div class="brand-sub">AI DASHBOARD v2.0</div>
+      </div>
+    </div>
+    <div class="status-bar">
+      <div class="pulse" id="sDot"></div>
+      <span class="status-text" id="sTxt">CONNECTING</span>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-section-label">Navigation</div>
+    <div class="nav-item active" onclick="goto('overview',this)">
+      <i class="fas fa-th-large"></i><span>Overview</span>
+    </div>
+    <div class="nav-section-label">Models</div>
+    <div class="nav-item" onclick="goto('house',this)">
+      <i class="fas fa-home"></i><span>House Price</span>
+      <div class="nav-dot house-dot"></div>
+    </div>
+    <div class="nav-item" onclick="goto('traffic',this)">
+      <i class="fas fa-traffic-light"></i><span>Traffic</span>
+      <div class="nav-dot traffic-dot"></div>
+    </div>
+    <div class="nav-item" onclick="goto('crime',this)">
+      <i class="fas fa-shield-alt"></i><span>Crime Risk</span>
+      <div class="nav-dot crime-dot"></div>
+    </div>
+    <div class="nav-item" onclick="goto('citizen',this)">
+      <i class="fas fa-users"></i><span>Citizens</span>
+      <div class="nav-dot citizen-dot"></div>
+    </div>
+    <div class="nav-section-label">Info</div>
+    <div class="nav-item" onclick="goto('team',this)">
+      <i class="fas fa-user-astronaut"></i><span>Team</span>
+    </div>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="server-pill">
+      <i class="fas fa-server"></i>
+      <span>localhost:5000</span>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="pgTitle">Overview</div>
+      <div class="page-sub" id="pgSub">Smart City Neural Intelligence System</div>
+    </div>
+    <div class="topbar-right">
+      <div class="stat-pill c-cyan"><span>Models</span><span class="val">4 / 4</span></div>
+      <div class="stat-pill c-emerald"><span>Accuracy</span><span class="val">96.89%</span></div>
+      <div class="stat-pill c-violet"><span>Mode</span><span class="val">LIVE</span></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- OVERVIEW PANEL -->
+    <div class="panel active" id="panel-overview">
+      <div class="panel-scroll">
+        <div class="kpi-row">
+          <div class="kpi"><div class="kpi-label">Neural Models</div><div class="kpi-val">04</div><div class="kpi-sub">All active</div></div>
+          <div class="kpi"><div class="kpi-label">Max Accuracy</div><div class="kpi-val">96<span style="font-size:1.2rem">%</span></div><div class="kpi-sub">Traffic SVM</div></div>
+          <div class="kpi"><div class="kpi-label">Team Size</div><div class="kpi-val">10</div><div class="kpi-sub">BCS 2024</div></div>
+          <div class="kpi"><div class="kpi-label">Uptime</div><div class="kpi-val">24/7</div><div class="kpi-sub">Real-time</div></div>
+        </div>
+        <div class="section-head"><h2>AI Modules</h2><span>Click to open</span></div>
+        <div class="module-grid">
+          <div class="mod-card" onclick="goto('house',document.querySelector('.nav-item:nth-child(4)'))">
+            <div class="mod-ico c"><i class="fas fa-home"></i></div>
+            <div><div class="mod-name">House Price Engine</div><div class="mod-desc">Predict property value using Linear Regression based on size, location & quality</div></div>
+            <div class="mod-acc c">REGRESSION</div>
+          </div>
+          <div class="mod-card" onclick="goto('traffic',document.querySelector('.nav-item:nth-child(5)'))">
+            <div class="mod-ico e"><i class="fas fa-traffic-light"></i></div>
+            <div><div class="mod-name">Traffic Analyzer</div><div class="mod-desc">Real-time traffic classification using SVM with 96.89% accuracy across Indian cities</div></div>
+            <div class="mod-acc e">96.89%</div>
+          </div>
+          <div class="mod-card" onclick="goto('crime',document.querySelector('.nav-item:nth-child(6)'))">
+            <div class="mod-ico r"><i class="fas fa-shield-alt"></i></div>
+            <div><div class="mod-name">Crime Risk Analyzer</div><div class="mod-desc">Assess urban crime risk using Logistic Regression on demographic & historical data</div></div>
+            <div class="mod-acc r">CLASSIFIER</div>
+          </div>
+          <div class="mod-card" onclick="goto('citizen',document.querySelector('.nav-item:nth-child(7)'))">
+            <div class="mod-ico v"><i class="fas fa-users"></i></div>
+            <div><div class="mod-name">Citizen Segmentation</div><div class="mod-desc">Classify citizens into segments using SVM on income, education & digital usage</div></div>
+            <div class="mod-acc v">85%+</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOUSE PANEL -->
+    <div class="panel" id="panel-house">
+      <div class="panel-scroll">
+        <div class="section-head"><h2>House Price Engine</h2><span>Linear Regression Model</span></div>
+        <div style="max-width:700px;">
+          <div class="card house">
+            <div class="card-header">
+              <div class="card-title-wrap">
+                <div class="card-icon"><i class="fas fa-home"></i></div>
+                <div><div class="card-name">PROPERTY VALUATION</div><div class="card-sub">Enter property details below</div></div>
+              </div>
+              <span class="badge">LINEAR REGRESSION</span>
+            </div>
+            <div class="card-body">
+              <form id="houseForm">
+                <div class="fg fg2">
+                  <div class="field"><label>Sq. Footage</label><input type="number" id="houseSqft" placeholder="2500" required></div>
+                  <div class="field"><label>Bedrooms</label><input type="number" id="houseBeds" placeholder="3" required></div>
+                  <div class="field"><label>Bathrooms</label><input type="number" id="houseBaths" placeholder="2" required></div>
+                  <div class="field"><label>Lot Size</label><input type="number" step="0.1" id="houseLot" placeholder="3.5" required></div>
+                </div>
+                <div class="fg fg1" style="margin-bottom:16px;">
+                  <div class="field"><label>Neighborhood Quality (1–10)</label><input type="number" id="houseQuality" placeholder="8" min="1" max="10" required></div>
+                </div>
+                <button type="button" class="btn-default" onclick="loadDefault('house')"><i class="fas fa-database"></i> &nbsp; LOAD DEFAULT DATA</button>
+                <button type="submit" class="btn"><i class="fas fa-calculator"></i> &nbsp; PREDICT PRICE</button>
+              </form>
+              <div class="result" id="houseResult"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRAFFIC PANEL -->
+    <div class="panel" id="panel-traffic">
+      <div class="panel-scroll">
+        <div class="section-head"><h2>Traffic Analyzer</h2><span>SVM — 96.89% Accuracy</span></div>
+        <div style="max-width:800px;">
+          <div class="card traffic">
+            <div class="card-header">
+              <div class="card-title-wrap">
+                <div class="card-icon"><i class="fas fa-traffic-light"></i></div>
+                <div><div class="card-name">TRAFFIC STATUS PREDICTION</div><div class="card-sub">Indian city road conditions</div></div>
+              </div>
+              <span class="badge">SVM 96.89%</span>
+            </div>
+            <div class="card-body">
+              <form id="trafficForm">
+                <div class="fg fg3">
+                  <div class="field"><label>City</label><input type="text" id="trafficCity" placeholder="Mumbai" required></div>
+                  <div class="field"><label>Area Code</label><input type="number" id="trafficAreaCode" placeholder="400001" required></div>
+                  <div class="field"><label>Population Density</label><input type="number" id="trafficPopDensity" placeholder="5000" required></div>
+                  <div class="field"><label>Vehicles / Hr</label><input type="number" id="trafficVehicles" placeholder="1000" required></div>
+                  <div class="field"><label>Traffic Signals</label><input type="number" id="trafficSignals" placeholder="5" required></div>
+                  <div class="field"><label>Weather</label>
+                    <select id="trafficWeather"><option>Clear</option><option>Rain</option><option>Fog</option></select>
+                  </div>
+                  <div class="field"><label>Time of Day</label>
+                    <select id="trafficTime"><option>Morning</option><option>Afternoon</option><option>Evening</option><option>Night</option></select>
+                  </div>
+                  <div class="field"><label>Day Type</label>
+                    <select id="trafficDayType"><option>Weekday</option><option>Weekend</option></select>
+                  </div>
+                  <div class="field"><label>Road Type</label>
+                    <select id="trafficRoadType"><option>Highway</option><option>Main Road</option><option>Street</option></select>
+                  </div>
+                </div>
+                <button type="button" class="btn-default" onclick="loadDefault('traffic')"><i class="fas fa-database"></i> &nbsp; LOAD DEFAULT DATA</button>
+                <button type="submit" class="btn"><i class="fas fa-road"></i> &nbsp; ANALYZE TRAFFIC</button>
+              </form>
+              <div class="result" id="trafficResult"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CRIME PANEL -->
+    <div class="panel" id="panel-crime">
+      <div class="panel-scroll">
+        <div class="section-head"><h2>Crime Risk Analyzer</h2><span>Logistic Regression Model</span></div>
+        <div style="max-width:800px;">
+          <div class="card crime">
+            <div class="card-header">
+              <div class="card-title-wrap">
+                <div class="card-icon"><i class="fas fa-shield-alt"></i></div>
+                <div><div class="card-name">URBAN CRIME RISK ASSESSMENT</div><div class="card-sub">Demographic & historical analysis</div></div>
+              </div>
+              <span class="badge">LOGISTIC REG.</span>
+            </div>
+            <div class="card-body">
+              <form id="crimeForm">
+                <div class="fg fg3">
+                  <div class="field"><label>City</label><input type="text" id="crimeCity" placeholder="Mumbai" required></div>
+                  <div class="field"><label>Area Code</label><input type="number" id="crimeAreaCode" placeholder="1" required></div>
+                  <div class="field"><label>Population</label><input type="number" id="crimePopulation" placeholder="50000" required></div>
+                  <div class="field"><label>Unemployment %</label><input type="number" step="0.1" id="crimeUnemployment" placeholder="5.5" required></div>
+                  <div class="field"><label>Police Stations</label><input type="number" id="crimePoliceStations" placeholder="10" required></div>
+                  <div class="field"><label>Time (0–23 hr)</label><input type="number" id="crimeTime" placeholder="14" min="0" max="23" required></div>
+                  <div class="field"><label>Victim Age</label><input type="number" id="crimeVictimAge" placeholder="35" required></div>
+                  <div class="field"><label>Victim Gender</label>
+                    <select id="crimeVictimGender"><option>Male</option><option>Female</option></select>
+                  </div>
+                  <div class="field"><label>Weapon Used</label>
+                    <select id="crimeWeapon"><option>None</option><option>Gun</option><option>Knife</option><option>Other</option></select>
+                  </div>
+                </div>
+                <div class="fg fg1" style="margin-bottom:16px;">
+                  <div class="field"><label>Past Crime Rate (%)</label><input type="number" step="0.1" id="crimePastRate" placeholder="15.2" required></div>
+                </div>
+                <button type="button" class="btn-default" onclick="loadDefault('crime')"><i class="fas fa-database"></i> &nbsp; LOAD DEFAULT DATA</button>
+                <button type="submit" class="btn"><i class="fas fa-exclamation-triangle"></i> &nbsp; ASSESS RISK</button>
+              </form>
+              <div class="result" id="crimeResult"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CITIZEN PANEL -->
+    <div class="panel" id="panel-citizen">
+      <div class="panel-scroll">
+        <div class="section-head"><h2>Citizen Segmentation</h2><span>SVM — 85%+ Accuracy</span></div>
+        <div style="max-width:800px;">
+          <div class="card citizen">
+            <div class="card-header">
+              <div class="card-title-wrap">
+                <div class="card-icon"><i class="fas fa-users"></i></div>
+                <div><div class="card-name">CITIZEN PROFILE CLASSIFIER</div><div class="card-sub">Urban demographic segmentation</div></div>
+              </div>
+              <span class="badge">SVM 85%+</span>
+            </div>
+            <div class="card-body">
+              <form id="citizenForm">
+                <div class="fg fg3">
+                  <div class="field"><label>City</label><input type="text" id="citizenCity" placeholder="Lucknow" required></div>
+                  <div class="field"><label>Age</label><input type="number" id="citizenAge" placeholder="35" required></div>
+                  <div class="field"><label>Monthly Income (₹)</label><input type="number" id="citizenIncome" placeholder="85000" required></div>
+                  <div class="field"><label>Education</label>
+                    <select id="citizenEdu"><option>Secondary</option><option>Graduate</option><option>Postgraduate</option></select>
+                  </div>
+                  <div class="field"><label>Employment</label>
+                    <select id="citizenEmp"><option>Private</option><option>Government</option><option>Unemployed</option></select>
+                  </div>
+                  <div class="field"><label>Digital Hrs / Day</label><input type="number" step="0.1" id="citizenDigital" placeholder="6.5" required></div>
+                  <div class="field"><label>Household Size</label><input type="number" id="citizenHousehold" placeholder="3" required></div>
+                  <div class="field"><label>Area Type</label>
+                    <select id="citizenArea"><option>Urban</option><option>Rural</option><option>Semi-Urban</option></select>
+                  </div>
+                  <div class="field"><label>Govt Schemes Used</label><input type="number" id="citizenScheme" placeholder="2" required></div>
+                </div>
+                <button type="button" class="btn-default" onclick="loadDefault('citizen')"><i class="fas fa-database"></i> &nbsp; LOAD DEFAULT DATA</button>
+                <button type="submit" class="btn"><i class="fas fa-user-tag"></i> &nbsp; SEGMENT CITIZEN</button>
+              </form>
+              <div class="result" id="citizenResult"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEAM PANEL -->
+    <div class="panel" id="panel-team">
+      <div class="panel-scroll">
+        <div class="section-head"><h2>Neural Network Team</h2><span>BCS 2024 — IIoT Semester 4</span></div>
+        <div class="team-grid">
+          <div class="tm lead"><div class="av v">YS</div><div class="tm-name">Yash Sharma</div><div class="tm-roll">BCS2024221</div><span class="tm-badge">LEADER</span></div>
+          <div class="tm"><div class="av c">MY</div><div class="tm-name">Manjesh Yadav</div><div class="tm-roll">BCS2024213</div></div>
+          <div class="tm"><div class="av e">MS</div><div class="tm-name">Mayuri Singh</div><div class="tm-roll">BCS2024220</div></div>
+          <div class="tm"><div class="av a">MU</div><div class="tm-name">M. Anas Usmani</div><div class="tm-roll">BCS2024224</div></div>
+          <div class="tm"><div class="av c">LG</div><div class="tm-name">Lucky Gangwar</div><div class="tm-roll">BCS2024233</div></div>
+          <div class="tm"><div class="av e">AT</div><div class="tm-name">Abhinav Tiwari</div><div class="tm-roll">BCS2024243</div></div>
+          <div class="tm"><div class="av a">MU</div><div class="tm-name">Mohd Uzair</div><div class="tm-roll">BCS2024255</div></div>
+          <div class="tm"><div class="av v">VS</div><div class="tm-name">Vansh Saxena</div><div class="tm-roll">BCS2024256</div></div>
+          <div class="tm"><div class="av c">AS</div><div class="tm-name">Aanya Srivastava</div><div class="tm-roll">BCS2024257</div></div>
+          <div class="tm"><div class="av e">MV</div><div class="tm-name">Manan Vashishtha</div><div class="tm-roll">BCS2024263</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const API='http://localhost:5000';
+const titles={overview:'Overview',house:'House Price Engine',traffic:'Traffic Analyzer',crime:'Crime Risk Analyzer',citizen:'Citizen Segmentation',team:'Team'};
+const subs={overview:'Smart City Neural Intelligence System',house:'Linear Regression • Property Valuation',traffic:'SVM • 96.89% Accuracy',crime:'Logistic Regression • Risk Assessment',citizen:'SVM • Urban Segmentation',team:'BCS 2024 — IIoT Project'};
+
+function goto(id, el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+  document.getElementById('pgTitle').textContent=titles[id]||id;
+  document.getElementById('pgSub').textContent=subs[id]||'';
+}
+
+async function ping(){
+  const dot=document.getElementById('sDot'),txt=document.getElementById('sTxt');
+  try{
+    const r=await fetch(API+'/');
+    if(r.ok){dot.classList.remove('off');txt.textContent='ONLINE';}
+    else throw 0;
+  }catch{dot.classList.add('off');txt.textContent='OFFLINE';}
+}
+ping();setInterval(ping,5000);
+
+async function call(ep,data,rid){
+  const b=document.getElementById(rid);
+  b.className='result busy';b.innerHTML='<i class="fas fa-circle-notch fa-spin"></i>  Processing...';
+  try{
+    const r=await fetch(API+ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    const j=await r.json();
+    if(j.success){
+      let m='';
+      if(ep==='/predict/house_price') m=`<i class="fas fa-check-circle"></i>  PREDICTED: $${j.predicted_price.toLocaleString()}`;
+      else if(ep==='/predict/traffic') m=`<i class="fas fa-check-circle"></i>  ${j.traffic_status}`;
+      else if(ep==='/predict/crime')   m=`<i class="fas fa-check-circle"></i>  RISK LEVEL: ${j.risk_level}`;
+      else if(ep==='/predict/citizen') m=`<i class="fas fa-check-circle"></i>  SEGMENT: ${j.segment_label}`;
+      b.className='result ok';b.innerHTML=m;
+    }else{b.className='result err';b.innerHTML=`<i class="fas fa-exclamation-triangle"></i>  ${j.error}`;}
+  }catch{b.className='result err';b.innerHTML='<i class="fas fa-plug"></i>  Backend offline — run app.py';}
+}
+
+function loadDefault(form){
+  if(form==='house'){
+    // Dataset row 0: Square_Footage=1360, Num_Bedrooms=2, Num_Bathrooms=1, Lot_Size=0.60, Neighborhood_Quality=5
+    document.getElementById('houseSqft').value=1360;
+    document.getElementById('houseBeds').value=2;
+    document.getElementById('houseBaths').value=1;
+    document.getElementById('houseLot').value=0.60;
+    document.getElementById('houseQuality').value=5;
+  } else if(form==='traffic'){
+    // Dataset row 0: City=Lucknow, Area_Code=47, Population_Density=8238, Vehicles_Per_Hour=1350, Traffic_Signals=9, Weather=Rain, Time_of_Day=Night, Day_Type=Weekday, Road_Type=Street
+    document.getElementById('trafficCity').value='Lucknow';
+    document.getElementById('trafficAreaCode').value=47;
+    document.getElementById('trafficPopDensity').value=8238;
+    document.getElementById('trafficVehicles').value=1350;
+    document.getElementById('trafficSignals').value=9;
+    document.getElementById('trafficWeather').value='Rain';
+    document.getElementById('trafficTime').value='Night';
+    document.getElementById('trafficDayType').value='Weekday';
+    document.getElementById('trafficRoadType').value='Street';
+  } else if(form==='crime'){
+    // Dataset row 1: City=Chennai, Area_Code=46, Population=58002, Unemployment_Rate=17.87, Police_Stations=3, Time=Night(22), Victim_Age=60, Victim_Gender=Male, Weapon_Used=Rod, Past_Crime_Rate=43
+    document.getElementById('crimeCity').value='Chennai';
+    document.getElementById('crimeAreaCode').value=46;
+    document.getElementById('crimePopulation').value=58002;
+    document.getElementById('crimeUnemployment').value=17.87;
+    document.getElementById('crimePoliceStations').value=3;
+    document.getElementById('crimeTime').value=22;
+    document.getElementById('crimeVictimAge').value=60;
+    document.getElementById('crimeVictimGender').value='Male';
+    document.getElementById('crimeWeapon').value='Other';
+    document.getElementById('crimePastRate').value=43;
+  } else if(form==='citizen'){
+    // Dataset row 0: City=Lucknow, Age=64, Monthly_Income=124641, Education=Secondary, Employment=Unemployed, Digital_Usage_Hours=9.1, Household_Size=2, Area_Type=Urban, Govt_Scheme_Usage=1
+    document.getElementById('citizenCity').value='Lucknow';
+    document.getElementById('citizenAge').value=64;
+    document.getElementById('citizenIncome').value=124641;
+    document.getElementById('citizenEdu').value='Secondary';
+    document.getElementById('citizenEmp').value='Unemployed';
+    document.getElementById('citizenDigital').value=9.1;
+    document.getElementById('citizenHousehold').value=2;
+    document.getElementById('citizenArea').value='Urban';
+    document.getElementById('citizenScheme').value=1;
+  }
+}
+
+document.getElementById('houseForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  call('/predict/house_price',{Square_Footage:+document.getElementById('houseSqft').value,Num_Bathrooms:+document.getElementById('houseBaths').value,Num_Bedrooms:+document.getElementById('houseBeds').value,Lot_Size:+document.getElementById('houseLot').value,Neighborhood_Quality:+document.getElementById('houseQuality').value},'houseResult');
+});
+document.getElementById('trafficForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  call('/predict/traffic',{City:document.getElementById('trafficCity').value,Area_Code:+document.getElementById('trafficAreaCode').value,Population_Density:+document.getElementById('trafficPopDensity').value,Vehicles_Per_Hour:+document.getElementById('trafficVehicles').value,Traffic_Signals:+document.getElementById('trafficSignals').value,Weather:document.getElementById('trafficWeather').value,Time_of_Day:document.getElementById('trafficTime').value,Day_Type:document.getElementById('trafficDayType').value,Road_Type:document.getElementById('trafficRoadType').value},'trafficResult');
+});
+document.getElementById('crimeForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  call('/predict/crime',{City:document.getElementById('crimeCity').value,Area_Code:+document.getElementById('crimeAreaCode').value,Population:+document.getElementById('crimePopulation').value,Unemployment_Rate:+document.getElementById('crimeUnemployment').value,Police_Stations:+document.getElementById('crimePoliceStations').value,Time:+document.getElementById('crimeTime').value,Victim_Age:+document.getElementById('crimeVictimAge').value,Victim_Gender:document.getElementById('crimeVictimGender').value,Weapon_Used:document.getElementById('crimeWeapon').value,Past_Crime_Rate:+document.getElementById('crimePastRate').value},'crimeResult');
+});
+document.getElementById('citizenForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  call('/predict/citizen',{City:document.getElementById('citizenCity').value,Age:+document.getElementById('citizenAge').value,Monthly_Income:+document.getElementById('citizenIncome').value,Education_Level:document.getElementById('citizenEdu').value,Employment_Type:document.getElementById('citizenEmp').value,Digital_Usage_Hours:+document.getElementById('citizenDigital').value,Household_Size:+document.getElementById('citizenHousehold').value,Area_Type:document.getElementById('citizenArea').value,Govt_Scheme_Usage:+document.getElementById('citizenScheme').value},'citizenResult');
+});
+
+/* PARTICLES */
+const cv=document.getElementById('particles'),cx=cv.getContext('2d');
+let pts=[];
+function resize(){cv.width=innerWidth;cv.height=innerHeight;}
+resize();window.addEventListener('resize',resize);
+function initPts(){
+  pts=[];
+  for(let i=0;i<90;i++)pts.push({x:Math.random()*cv.width,y:Math.random()*cv.height,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5});
+}
+initPts();
+function drawPts(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  pts.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0||p.x>cv.width)p.vx*=-1;
+    if(p.y<0||p.y>cv.height)p.vy*=-1;
+    cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    cx.fillStyle='rgba(34,211,238,0.35)';cx.fill();
+  });
+  pts.forEach((a,i)=>pts.slice(i+1).forEach(b=>{
+    const d=Math.hypot(a.x-b.x,a.y-b.y);
+    if(d<120){cx.beginPath();cx.moveTo(a.x,a.y);cx.lineTo(b.x,b.y);cx.strokeStyle=`rgba(34,211,238,${.12*(1-d/120)})`;cx.lineWidth=.5;cx.stroke();}
+  }));
+  requestAnimationFrame(drawPts);
+}
+drawPts();
+</script>
+</body>
+</html>
