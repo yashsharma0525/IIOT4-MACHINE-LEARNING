@@ -1,7 +1,7 @@
-fastapi
-uvicorn
-numpy
-pandas
+flask
+flask-cors
 scikit-learn
+pandas
+numpy
 joblib
-python-multipart
+gunicorn
