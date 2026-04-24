@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart City Analytic System</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#faf7f2;
+  --bg2:#f4ede3;
+  --glass:rgba(255,252,247,0.82);
+  --glass2:rgba(255,252,247,0.96);
+  --b1:rgba(180,120,70,0.13);
+  --b2:rgba(180,120,70,0.28);
+  --cyan:#0e7490;
+  --teal:#0f766e;
+  --violet:#7c3aed;
+  --coral:#e05c3a;
+  --rose:#e11d48;
+  --amber:#b45309;
+  --sage:#4a7c59;
+  --gold:#c2820a;
+  --text:#1c1208;
+  --text2:#3d2c1e;
+  --muted:rgba(60,40,20,0.45);
+  --font:'Plus Jakarta Sans',sans-serif;
+  --display:'Playfair Display',serif;
+  --mono:'DM Mono',monospace;
+  --nav:268px;
+  --r:14px;
+  --shadow:0 4px 24px rgba(120,70,20,0.10), 0 1px 4px rgba(120,70,20,0.07);
+  --shadow-lg:0 12px 48px rgba(120,70,20,0.13), 0 2px 8px rgba(120,70,20,0.08);
+}
+html,body{height:100%;overflow:hidden;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;}
+
+/* ── CANVAS BG ── */
+#particles{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+/* ── CITY BG LAYER ── */
+#cityBg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+#cityBg svg{position:absolute;bottom:0;left:0;width:100%;height:100%;}
+
+/* ── AMBIENT GLOWS ── */
+.env-glow{position:fixed;border-radius:50%;filter:blur(100px);opacity:0.22;pointer-events:none;z-index:0;}
+#glow1{width:800px;height:500px;background:#fbbf24;top:-200px;right:-100px;animation:gshift 16s ease-in-out infinite alternate;}
+#glow2{width:600px;height:400px;background:#fca5a5;bottom:-100px;left:-80px;animation:gshift2 18s ease-in-out infinite alternate;}
+#glow3{width:500px;height:350px;background:#86efac;top:30%;left:50%;animation:gshift 22s ease-in-out infinite alternate-reverse;}
+@keyframes gshift{0%{transform:translate(0,0);}100%{transform:translate(50px,35px);}}
+@keyframes gshift2{0%{transform:translate(0,0);}100%{transform:translate(-40px,-25px);}}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:var(--nav);min-width:var(--nav);
+  height:100vh;
+  background:rgba(250,245,235,0.9);
+  border-right:1px solid var(--b1);
+  display:flex;flex-direction:column;
+  z-index:10;position:relative;
+  backdrop-filter:blur(28px);
+  box-shadow:3px 0 24px rgba(120,70,20,0.08);
+}
+.sidebar-top{padding:28px 22px 20px;border-bottom:1px solid var(--b1);}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-icon{
+  width:42px;height:42px;
+  background:linear-gradient(135deg,#e05c3a,#f59e0b);
+  border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;color:#fff;
+  box-shadow:0 4px 14px rgba(224,92,58,0.35);
+}
+.brand-name{
+  font-family:var(--display);font-size:.95rem;font-weight:700;
+  color:var(--text);letter-spacing:.01em;line-height:1.1;
+}
+.brand-sub{font-size:.58rem;color:var(--muted);letter-spacing:.15em;margin-top:3px;font-family:var(--mono);text-transform:uppercase;}
+
+/* STATUS */
+.status-bar{
+  margin:14px 22px 0;
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;
+  background:rgba(74,124,89,0.08);
+  border:1px solid rgba(74,124,89,0.2);
+  border-radius:8px;
+}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--sage);animation:blink 2s infinite;}
+.pulse.off{background:var(--rose);animation:none;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+.status-text{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;color:var(--sage);}
+
+/* NAV */
+.nav{flex:1;padding:18px 14px;display:flex;flex-direction:column;gap:3px;overflow-y:auto;}
+.nav-section-label{
+  font-size:.52rem;letter-spacing:.22em;color:var(--muted);
+  text-transform:uppercase;padding:14px 8px 5px;font-family:var(--mono);
+}
+.nav-item{
+  display:flex;align-items:center;gap:11px;
+  padding:10px 12px;border-radius:10px;cursor:pointer;
+  transition:all .2s;border:1px solid transparent;
+  font-size:.82rem;font-weight:500;color:var(--muted);
+}
+.nav-item:hover{background:rgba(224,92,58,0.07);color:var(--text2);}
+.nav-item.active{
+  background:rgba(224,92,58,0.1);
+  border-color:rgba(224,92,58,0.2);
+  color:var(--text);
+}
+.nav-item i{font-size:14px;width:16px;text-align:center;transition:color .2s;}
+.nav-item.active i,.nav-item:hover i{color:var(--coral);}
+.nav-dot{margin-left:auto;width:6px;height:6px;border-radius:50%;}
+.house-dot{background:var(--cyan);}
+.traffic-dot{background:var(--sage);}
+.crime-dot{background:var(--rose);}
+.citizen-dot{background:var(--violet);}
+
+/* SIDEBAR BOTTOM */
+.sidebar-bottom{padding:14px;border-top:1px solid var(--b1);}
+.server-pill{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;
+  background:rgba(180,120,70,0.06);border:1px solid var(--b1);
+  border-radius:8px;font-family:var(--mono);font-size:.6rem;color:var(--muted);
+}
+.server-pill i{color:var(--sage);font-size:11px;}
+
+/* MAIN */
+.main{flex:1;height:100vh;overflow-y:auto;display:flex;flex-direction:column;position:relative;z-index:5;}
+.main::-webkit-scrollbar{width:4px;}
+.main::-webkit-scrollbar-track{background:transparent;}
+.main::-webkit-scrollbar-thumb{background:rgba(180,120,70,0.2);border-radius:4px;}
+
+/* TOP BAR */
+.topbar{
+  position:sticky;top:0;z-index:20;
+  padding:14px 32px;
+  background:rgba(250,247,242,0.92);
+  backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--b1);
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 1px 12px rgba(120,70,20,0.06);
+}
+.page-title{font-size:1.1rem;font-weight:700;letter-spacing:.01em;font-family:var(--display);}
+.page-sub{font-size:.67rem;color:var(--muted);margin-top:2px;font-family:var(--mono);letter-spacing:.05em;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.stat-pill{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 14px;
+  background:var(--glass);border:1px solid var(--b1);
+  border-radius:100px;font-family:var(--mono);font-size:.63rem;
+  box-shadow:0 2px 8px rgba(120,70,20,0.06);
+}
+.stat-pill .val{font-weight:600;}
+.stat-pill.c-cyan .val{color:var(--cyan);}
+.stat-pill.c-violet .val{color:var(--violet);}
+.stat-pill.c-emerald .val{color:var(--sage);}
+
+/* CONTENT */
+.content{padding:26px 32px;flex:1;}
+
+/* PANELS */
+.panel{display:none;animation:fadeUp .35s cubic-bezier(.22,1,.36,1);}
+.panel.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* CARDS */
+.model-wrap{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;}
+.card{
+  background:var(--glass);
+  border:1px solid var(--b1);
+  border-radius:var(--r);
+  overflow:hidden;
+  transition:transform .25s,box-shadow .25s,border-color .25s;
+  box-shadow:var(--shadow);
+}
+.card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--b2);}
+
+.card-header{
+  padding:18px 22px;
+  border-bottom:1px solid var(--b1);
+  display:flex;align-items:center;justify-content:space-between;
+  position:relative;overflow:hidden;
+}
+.card-header::before{content:'';position:absolute;inset:0;opacity:.06;}
+.card.house .card-header{background:linear-gradient(135deg,rgba(14,116,144,0.06) 0%,transparent 60%);}
+.card.traffic .card-header{background:linear-gradient(135deg,rgba(74,124,89,0.07) 0%,transparent 60%);}
+.card.crime .card-header{background:linear-gradient(135deg,rgba(224,92,58,0.07) 0%,transparent 60%);}
+.card.citizen .card-header{background:linear-gradient(135deg,rgba(124,58,237,0.06) 0%,transparent 60%);}
+
+.card-icon{
+  width:38px;height:38px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;margin-right:12px;flex-shrink:0;
+}
+.house .card-icon{background:rgba(14,116,144,.1);color:var(--cyan);}
+.traffic .card-icon{background:rgba(74,124,89,.12);color:var(--sage);}
+.crime .card-icon{background:rgba(224,92,58,.1);color:var(--coral);}
+.citizen .card-icon{background:rgba(124,58,237,.1);color:var(--violet);}
+
+.card-title-wrap{display:flex;align-items:center;}
+.card-name{font-size:.8rem;font-weight:700;letter-spacing:.05em;color:var(--text);}
+.card-sub{font-size:.58rem;color:var(--muted);margin-top:2px;font-family:var(--mono);letter-spacing:.05em;}
+.badge{
+  font-family:var(--mono);font-size:.58rem;font-weight:500;
+  padding:4px 10px;border-radius:100px;letter-spacing:.05em;
+}
+.house .badge{background:rgba(14,116,144,.08);color:var(--cyan);border:1px solid rgba(14,116,144,.2);}
+.traffic .badge{background:rgba(74,124,89,.08);color:var(--sage);border:1px solid rgba(74,124,89,.2);}
+.crime .badge{background:rgba(224,92,58,.08);color:var(--coral);border:1px solid rgba(224,92,58,.2);}
+.citizen .badge{background:rgba(124,58,237,.08);color:var(--violet);border:1px solid rgba(124,58,237,.2);}
+
+.card-body{padding:20px 22px;}
+.fg{display:grid;gap:12px;margin-bottom:16px;}
+.fg2{grid-template-columns:1fr 1fr;}
+.fg3{grid-template-columns:1fr 1fr 1fr;}
+.fg1{grid-template-columns:1fr;}
+
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{
+  font-size:.56rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);font-family:var(--mono);
+}
+.field input,.field select{
+  background:rgba(255,250,240,0.9);
+  border:1px solid rgba(180,120,70,0.18);
+  border-radius:8px;padding:9px 12px;
+  color:var(--text);font-family:var(--font);font-size:.82rem;
+  outline:none;transition:border-color .2s,box-shadow .2s,background .2s;
+  appearance:none;-webkit-appearance:none;
+}
+.field input:focus,.field select:focus{
+  border-color:rgba(224,92,58,0.45);
+  background:#fff;
+  box-shadow:0 0 0 3px rgba(224,92,58,0.08);
+}
+.field input::placeholder{color:rgba(60,40,20,0.25);}
+.field select option{background:#fff;color:var(--text);}
+
+/* BUTTONS */
+.btn{
+  width:100%;padding:12px;border:none;border-radius:10px;
+  font-family:var(--mono);font-size:.68rem;font-weight:500;
+  letter-spacing:.12em;cursor:pointer;
+  transition:all .2s;text-transform:uppercase;
+}
+.btn:hover{filter:brightness(1.06);transform:translateY(-1px);}
+.btn:active{transform:scale(.99);}
+.house .btn{background:linear-gradient(135deg,#0e7490,#0f766e);color:#fff;box-shadow:0 4px 14px rgba(14,116,144,0.3);}
+.traffic .btn{background:linear-gradient(135deg,#4a7c59,#059669);color:#fff;box-shadow:0 4px 14px rgba(74,124,89,0.3);}
+.crime .btn{background:linear-gradient(135deg,#c2410c,#e05c3a);color:#fff;box-shadow:0 4px 14px rgba(224,92,58,0.3);}
+.citizen .btn{background:linear-gradient(135deg,#6d28d9,#7c3aed);color:#fff;box-shadow:0 4px 14px rgba(124,58,237,0.3);}
+
+.btn-default{
+  width:100%;padding:9px;border-radius:10px;
+  font-family:var(--mono);font-size:.63rem;font-weight:500;
+  letter-spacing:.1em;cursor:pointer;transition:all .2s;text-transform:uppercase;
+  background:transparent;margin-bottom:10px;
+}
+.btn-default:hover{background:rgba(180,120,70,0.06);}
+.btn-default:active{transform:scale(.99);}
+.house .btn-default{border:1px solid rgba(14,116,144,.3);color:var(--cyan);}
+.traffic .btn-default{border:1px solid rgba(74,124,89,.3);color:var(--sage);}
+.crime .btn-default{border:1px solid rgba(224,92,58,.3);color:var(--coral);}
+.citizen .btn-default{border:1px solid rgba(124,58,237,.3);color:var(--violet);}
+
+.btn-random{
+  width:100%;padding:9px;border-radius:10px;
+  font-family:var(--mono);font-size:.63rem;font-weight:500;
+  letter-spacing:.1em;cursor:pointer;transition:all .2s;text-transform:uppercase;
+  background:transparent;margin-bottom:8px;position:relative;overflow:hidden;
+}
+.btn-random:hover{background:rgba(180,120,70,0.06);}
+.btn-random:active{transform:scale(.99);}
+.house .btn-random{border:1px solid rgba(14,116,144,.4);color:var(--cyan);}
+.traffic .btn-random{border:1px solid rgba(74,124,89,.4);color:var(--sage);}
+.crime .btn-random{border:1px solid rgba(224,92,58,.4);color:var(--coral);}
+.citizen .btn-random{border:1px solid rgba(124,58,237,.4);color:var(--violet);}
+.row-badge{
+  font-family:var(--mono);font-size:.52rem;
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  opacity:.5;letter-spacing:.04em;
+}
+
+/* RESULTS */
+.result{
+  display:none;margin-top:12px;padding:12px 16px;border-radius:10px;
+  font-family:var(--mono);font-size:.72rem;font-weight:500;
+  text-align:center;letter-spacing:.05em;animation:fadeUp .25s ease;
+}
+.result.ok{display:block;background:rgba(74,124,89,.07);border:1px solid rgba(74,124,89,.22);color:var(--sage);}
+.result.err{display:block;background:rgba(224,92,58,.06);border:1px solid rgba(224,92,58,.22);color:var(--coral);}
+.result.busy{display:block;background:rgba(180,120,70,.04);border:1px solid var(--b1);color:var(--muted);}
+
+/* KPI OVERVIEW */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+.kpi{
+  padding:22px 20px;
+  background:var(--glass);
+  border:1px solid var(--b1);
+  border-radius:var(--r);
+  position:relative;overflow:hidden;
+  transition:all .25s;
+  box-shadow:var(--shadow);
+}
+.kpi:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:var(--b2);}
+.kpi::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0;
+}
+.kpi:nth-child(1)::before{background:linear-gradient(90deg,var(--cyan),#67e8f9);}
+.kpi:nth-child(2)::before{background:linear-gradient(90deg,var(--sage),#86efac);}
+.kpi:nth-child(3)::before{background:linear-gradient(90deg,var(--violet),#c4b5fd);}
+.kpi:nth-child(4)::before{background:linear-gradient(90deg,var(--gold),#fbbf24);}
+.kpi-label{font-size:.58rem;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;font-family:var(--mono);}
+.kpi-val{font-family:var(--display);font-size:2.1rem;font-weight:700;line-height:1;margin:10px 0 5px;letter-spacing:-.01em;}
+.kpi:nth-child(1) .kpi-val{color:var(--cyan);}
+.kpi:nth-child(2) .kpi-val{color:var(--sage);}
+.kpi:nth-child(3) .kpi-val{color:var(--violet);}
+.kpi:nth-child(4) .kpi-val{color:var(--gold);}
+.kpi-sub{font-size:.63rem;color:var(--muted);}
+
+/* MODULE CARDS */
+.module-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+.mod-card{
+  padding:20px 22px;
+  background:var(--glass);border:1px solid var(--b1);
+  border-radius:var(--r);cursor:pointer;
+  transition:all .25s;display:flex;align-items:center;gap:16px;
+  box-shadow:var(--shadow);
+}
+.mod-card:hover{border-color:var(--b2);background:var(--glass2);transform:translateY(-3px);box-shadow:var(--shadow-lg);}
+.mod-ico{
+  width:48px;height:48px;border-radius:12px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.mod-ico.c{background:rgba(14,116,144,.1);color:var(--cyan);}
+.mod-ico.e{background:rgba(74,124,89,.1);color:var(--sage);}
+.mod-ico.r{background:rgba(224,92,58,.1);color:var(--coral);}
+.mod-ico.v{background:rgba(124,58,237,.1);color:var(--violet);}
+.mod-name{font-size:.84rem;font-weight:700;margin-bottom:4px;color:var(--text);}
+.mod-desc{font-size:.68rem;color:var(--muted);line-height:1.45;}
+.mod-acc{
+  margin-left:auto;font-family:var(--mono);font-size:.6rem;
+  padding:4px 10px;border-radius:100px;flex-shrink:0;
+}
+.mod-acc.c{background:rgba(14,116,144,.08);color:var(--cyan);border:1px solid rgba(14,116,144,.18);}
+.mod-acc.e{background:rgba(74,124,89,.08);color:var(--sage);border:1px solid rgba(74,124,89,.18);}
+.mod-acc.r{background:rgba(224,92,58,.08);color:var(--coral);border:1px solid rgba(224,92,58,.18);}
+.mod-acc.v{background:rgba(124,58,237,.08);color:var(--violet);border:1px solid rgba(124,58,237,.18);}
+
+/* TEAM PANEL */
+.team-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+.tm{
+  padding:16px 12px;text-align:center;
+  background:var(--glass);border:1px solid var(--b1);
+  border-radius:var(--r);transition:all .2s;
+  box-shadow:var(--shadow);
+}
+.tm:hover{border-color:var(--b2);transform:translateY(-2px);box-shadow:var(--shadow-lg);}
+.tm.lead{border-color:rgba(224,92,58,.25);background:rgba(224,92,58,.03);}
+.av{
+  width:42px;height:42px;border-radius:50%;
+  margin:0 auto 10px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:.7rem;font-weight:700;
+}
+.av.c{background:rgba(14,116,144,.12);color:var(--cyan);}
+.av.v{background:rgba(124,58,237,.12);color:var(--violet);}
+.av.e{background:rgba(74,124,89,.12);color:var(--sage);}
+.av.a{background:rgba(194,130,10,.12);color:var(--gold);}
+.tm-name{font-size:.72rem;font-weight:600;line-height:1.3;color:var(--text2);}
+.tm-roll{font-size:.56rem;color:var(--muted);font-family:var(--mono);margin-top:3px;}
+.tm-badge{
+  display:inline-block;margin-top:6px;
+  font-size:.5rem;padding:3px 9px;border-radius:100px;
+  background:rgba(224,92,58,.1);color:var(--coral);
+  font-family:var(--mono);letter-spacing:.08em;border:1px solid rgba(224,92,58,.2);
+}
+
+/* CHART SECTION */
+.chart-section{
+  margin-top:20px;
+  padding:20px 22px;
+  background:var(--glass);
+  border:1px solid var(--b1);
+  border-radius:var(--r);
+  box-shadow:var(--shadow);
+  animation:fadeUp .4s cubic-bezier(.22,1,.36,1);
+}
+.chart-section-title{
+  font-family:var(--display);font-size:.88rem;font-weight:700;
+  color:var(--text);margin-bottom:16px;padding-bottom:10px;
+  border-bottom:1px solid var(--b1);
+  display:flex;align-items:center;gap:8px;
+}
+.chart-section-title i{font-size:13px;}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.chart-box{
+  background:rgba(255,252,247,0.96);
+  border:1px solid var(--b1);
+  border-radius:10px;
+  padding:16px;
+}
+.chart-box h4{
+  font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--muted);font-family:var(--mono);margin-bottom:12px;
+}
+.chart-box canvas{max-height:220px;}
+@media(max-width:640px){.chart-grid{grid-template-columns:1fr;}}
+
+.panel-scroll{max-height:calc(100vh - 130px);overflow-y:auto;padding-bottom:32px;}
+.panel-scroll::-webkit-scrollbar{width:3px;}
+.panel-scroll::-webkit-scrollbar-thumb{background:rgba(180,120,70,0.2);border-radius:4px;}
+
+/* SECTION HEAD */
+.section-head{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:20px;padding-bottom:12px;
+  border-bottom:1px solid var(--b1);
+}
+.section-head h2{font-size:1rem;font-weight:700;font-family:var(--display);letter-spacing:.01em;color:var(--text);}
+.section-head span{font-size:.62rem;color:var(--muted);font-family:var(--mono);}
+
+/* HAMBURGER */
+.hamburger{
+  display:none;position:fixed;top:14px;left:14px;z-index:200;
+  width:38px;height:38px;border-radius:10px;
+  background:var(--glass2);border:1px solid var(--b2);
+  align-items:center;justify-content:center;
+  cursor:pointer;color:var(--coral);font-size:15px;
+  backdrop-filter:blur(12px);
+  box-shadow:var(--shadow);
+}
+
+/* SIDEBAR OVERLAY */
+.sidebar-overlay{display:none;position:fixed;inset:0;z-index:99;background:rgba(20,10,0,0.35);backdrop-filter:blur(2px);}
+.sidebar-overlay.active{display:block;}
+
+/* TABLET */
+@media(max-width:1100px){
+  :root{--nav:72px;}
+  .brand-name,.brand-sub,.nav-item span,.status-bar,.server-pill span,.nav-section-label{display:none;}
+  .nav-item{justify-content:center;padding:12px;}
+  .nav-dot{display:none;}
+  .sidebar-top{padding:20px 14px;}
+  .brand{justify-content:center;}
+  .topbar{padding:14px 20px;}
+  .content{padding:20px;}
+}
+@media(max-width:900px){
+  .kpi-row{grid-template-columns:1fr 1fr;}
+  .model-wrap,.module-grid{grid-template-columns:1fr 1fr;}
+  .team-grid{grid-template-columns:repeat(3,1fr);}
+  .fg3{grid-template-columns:1fr 1fr;}
+  .topbar-right .stat-pill:last-child{display:none;}
+}
+@media(max-width:640px){
+  html,body{overflow:auto;}
+  .sidebar{position:fixed;top:0;left:-100%;width:240px;min-width:240px;height:100%;z-index:150;transition:left .28s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 32px rgba(80,40,10,.2);}
+  .sidebar.open{left:0;}
+  .brand-name,.brand-sub,.nav-item span,.status-bar,.server-pill span,.nav-section-label{display:revert;}
+  .nav-item{justify-content:flex-start;padding:10px 12px;}
+  .nav-dot{display:block;}
+  .sidebar-top{padding:22px 20px 16px;}
+  .brand{justify-content:flex-start;}
+  :root{--nav:0px;}
+  .hamburger{display:flex;}
+  .main{width:100%;height:auto;min-height:100vh;overflow-y:visible;}
+  .topbar{padding:14px 16px 14px 62px;}
+  .page-title{font-size:.95rem;}
+  .topbar-right{gap:6px;}
+  .topbar-right .stat-pill{padding:5px 8px;font-size:.58rem;}
+  .topbar-right .stat-pill:nth-child(2),.topbar-right .stat-pill:nth-child(3){display:none;}
+  .content{padding:16px;}
+  .panel-scroll{max-height:none;overflow-y:visible;}
+  .kpi-row{grid-template-columns:1fr 1fr;gap:10px;}
+  .kpi{padding:16px 14px;}
+  .kpi-val{font-size:1.6rem;}
+  .model-wrap,.module-grid{grid-template-columns:1fr;}
+  .team-grid{grid-template-columns:1fr 1fr;}
+  .fg2,.fg3{grid-template-columns:1fr;}
+  .fg{gap:10px;}
+  .card-header{flex-wrap:wrap;gap:8px;}
+  .badge{font-size:.55rem;padding:3px 8px;}
+  .card-body{padding:16px 14px;}
+  .section-head{margin-bottom:14px;}
+  .mod-card{padding:14px 16px;gap:12px;}
+  .mod-ico{width:40px;height:40px;font-size:16px;}
+  .mod-acc{display:none;}
+  .tm{padding:12px 8px;}
+  .btn,.btn-default,.btn-random{padding:13px;font-size:.68rem;}
+  .field input,.field select{padding:11px 12px;font-size:.88rem;}
+  [style*="max-width:700px"],[style*="max-width:800px"]{max-width:100% !important;}
+}
+</style>
+</head>
+<body>
+<canvas id="particles"></canvas>
+
+<!-- AMBIENT GLOWS -->
+<div class="env-glow" id="glow1"></div>
+<div class="env-glow" id="glow2"></div>
+<div class="env-glow" id="glow3"></div>
+
+<!-- CITY BACKGROUND -->
+<div id="cityBg">
+<svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bfdbfe"/>
+      <stop offset="40%" stop-color="#dbeafe"/>
+      <stop offset="80%" stop-color="#eff6ff"/>
+      <stop offset="100%" stop-color="#e0f2fe"/>
+    </linearGradient>
+    <linearGradient id="sunGlow" cx="50%" cy="50%" r="50%" fx="50%" fy="50%" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#fef3c7" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#fef3c7" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="sunRad" cx="80%" cy="15%" r="20%">
+      <stop offset="0%" stop-color="#fde68a" stop-opacity="0.7"/>
+      <stop offset="60%" stop-color="#fef3c7" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#bfdbfe" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="bShadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(0,100,180,0.1)"/>
+    </filter>
+    <filter id="softBlur">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+    <pattern id="gridPat" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(2,132,199,0.06)" stroke-width="0.5"/>
+    </pattern>
+    <pattern id="hexPat" x="0" y="0" width="40" height="46" patternUnits="userSpaceOnUse">
+      <polygon points="20,2 38,13 38,33 20,44 2,33 2,13" fill="none" stroke="rgba(2,132,199,0.04)" stroke-width="0.5"/>
+    </pattern>
+  </defs>
+
+  <!-- Sky -->
+  <rect width="1440" height="900" fill="url(#skyGrad)"/>
+  <!-- Sun glow -->
+  <rect width="1440" height="900" fill="url(#sunRad)"/>
+  <!-- Grid overlay -->
+  <rect width="1440" height="900" fill="url(#gridPat)" opacity="0.8"/>
+
+  <!-- Sun -->
+  <circle cx="1150" cy="100" r="50" fill="#fef3c7" opacity="0.5"/>
+  <circle cx="1150" cy="100" r="32" fill="#fde68a" opacity="0.6"/>
+  <circle cx="1150" cy="100" r="20" fill="#fbbf24" opacity="0.7"/>
+
+  <!-- Clouds -->
+  <g opacity="0.55">
+    <ellipse cx="200" cy="130" rx="90" ry="28" fill="white"/>
+    <ellipse cx="240" cy="115" rx="60" ry="25" fill="white"/>
+    <ellipse cx="160" cy="118" rx="50" ry="22" fill="white"/>
+    <ellipse cx="800" cy="90" rx="80" ry="24" fill="white"/>
+    <ellipse cx="840" cy="76" rx="55" ry="22" fill="white"/>
+    <ellipse cx="760" cy="80" rx="45" ry="20" fill="white"/>
+    <ellipse cx="1300" cy="140" rx="70" ry="22" fill="white"/>
+    <ellipse cx="1330" cy="125" rx="48" ry="20" fill="white"/>
+  </g>
+
+  <!-- Far background hills (light green environment) -->
+  <path d="M0,680 Q180,600 360,640 Q480,590 620,625 Q720,570 850,610 Q970,565 1100,595 Q1220,555 1360,575 Q1410,560 1440,565 L1440,900 L0,900 Z" fill="#d1fae5" opacity="0.6"/>
+  <path d="M0,720 Q150,660 300,690 Q440,650 580,675 Q700,640 840,665 Q980,635 1100,655 Q1240,625 1440,640 L1440,900 L0,900 Z" fill="#a7f3d0" opacity="0.35"/>
+
+  <!-- Far buildings (light, airy) -->
+  <g opacity="0.3" fill="#bfdbfe">
+    <rect x="30" y="580" width="40" height="120"/>
+    <rect x="80" y="555" width="30" height="145"/>
+    <rect x="118" y="570" width="48" height="130"/>
+    <rect x="174" y="535" width="35" height="165"/>
+    <rect x="1160" y="560" width="36" height="140"/>
+    <rect x="1203" y="535" width="28" height="165"/>
+    <rect x="1238" y="575" width="48" height="125"/>
+    <rect x="1295" y="520" width="40" height="180"/>
+    <rect x="1345" y="555" width="52" height="145"/>
+    <rect x="1402" y="535" width="38" height="165"/>
+  </g>
+
+  <!-- Mid buildings -->
+  <g filter="url(#bShadow)">
+    <!-- Left cluster -->
+    <rect x="0" y="490" width="55" height="290" fill="#dbeafe" stroke="rgba(2,132,199,0.2)" stroke-width="0.8"/>
+    <!-- Reflective windows -->
+    <rect x="8" y="505" width="9" height="7" fill="rgba(2,132,199,0.25)" rx="1"/>
+    <rect x="22" y="505" width="9" height="7" fill="rgba(125,211,252,0.4)" rx="1"/>
+    <rect x="36" y="505" width="9" height="7" fill="rgba(2,132,199,0.2)" rx="1"/>
+    <rect x="8" y="522" width="9" height="7" fill="rgba(124,58,237,0.15)" rx="1"/>
+    <rect x="22" y="522" width="9" height="7" fill="rgba(2,132,199,0.3)" rx="1"/>
+    <rect x="36" y="522" width="9" height="7" fill="rgba(125,211,252,0.35)" rx="1"/>
+    <rect x="8" y="539" width="9" height="7" fill="rgba(2,132,199,0.2)" rx="1"/>
+    <rect x="22" y="539" width="9" height="7" fill="rgba(2,132,199,0.25)" rx="1"/>
+    <rect x="36" y="539" width="9" height="7" fill="rgba(124,58,237,0.15)" rx="1"/>
+
+    <rect x="60" y="430" width="72" height="350" fill="#e0f2fe" stroke="rgba(2,132,199,0.18)" stroke-width="0.8"/>
+    <!-- Antenna -->
+    <line x1="96" y1="430" x2="96" y2="405" stroke="rgba(2,132,199,0.5)" stroke-width="1.5"/>
+    <circle cx="96" cy="403" r="2.5" fill="#fb7185" opacity="0.7"><animate attributeName="opacity" values="0.7;0.2;0.7" dur="2s" repeatCount="indefinite"/></circle>
+    <!-- Windows -->
+    <rect x="70" y="445" width="11" height="8" fill="rgba(125,211,252,0.5)" rx="1"/>
+    <rect x="87" y="445" width="11" height="8" fill="rgba(2,132,199,0.3)" rx="1"/>
+    <rect x="104" y="445" width="11" height="8" fill="rgba(125,211,252,0.4)" rx="1"/>
+    <rect x="121" y="445" width="11" height="8" fill="rgba(2,132,199,0.25)" rx="1"/>
+    <rect x="70" y="463" width="11" height="8" fill="rgba(2,132,199,0.2)" rx="1"/>
+    <rect x="87" y="463" width="11" height="8" fill="rgba(125,211,252,0.45)" rx="1"/>
+    <rect x="104" y="463" width="11" height="8" fill="rgba(2,132,199,0.3)" rx="1"/>
+    <rect x="121" y="463" width="11" height="8" fill="rgba(124,58,237,0.2)" rx="1"/>
+    <rect x="70" y="481" width="11" height="8" fill="rgba(125,211,252,0.35)" rx="1"/>
+    <rect x="87" y="481" width="11" height="8" fill="rgba(2,132,199,0.25)" rx="1"/>
+    <rect x="104" y="481" width="11" height="8" fill="rgba(2,132,199,0.2)" rx="1"/>
+    <rect x="121" y="481" width="11" height="8" fill="rgba(125,211,252,0.4)" rx="1"/>
+
+    <!-- Center skyscraper (glass) -->
+    <rect x="622" y="310" width="92" height="470" fill="#e0f2fe" stroke="rgba(2,132,199,0.2)" stroke-width="0.8"/>
+    <rect x="627" y="300" width="82" height="13" fill="#bfdbfe"/>
+    <!-- Vertical glass lines -->
+    <line x1="652" y1="310" x2="652" y2="780" stroke="rgba(2,132,199,0.1)" stroke-width="0.8"/>
+    <line x1="668" y1="310" x2="668" y2="780" stroke="rgba(125,211,252,0.12)" stroke-width="0.6"/>
+    <line x1="684" y1="310" x2="684" y2="780" stroke="rgba(2,132,199,0.1)" stroke-width="0.8"/>
+    <!-- Antenna -->
+    <line x1="668" y1="300" x2="668" y2="272" stroke="rgba(2,132,199,0.6)" stroke-width="2"/>
+    <circle cx="668" cy="270" r="3" fill="#fb7185" opacity="0.8"><animate attributeName="opacity" values="0.8;0.2;0.8" dur="1.8s" repeatCount="indefinite"/></circle>
+    <!-- Windows with sky reflection -->
+    <rect x="632" y="325" width="13" height="9" fill="rgba(125,211,252,0.5)" rx="1"/>
+    <rect x="651" y="325" width="13" height="9" fill="rgba(2,132,199,0.35)" rx="1"/>
+    <rect x="670" y="325" width="13" height="9" fill="rgba(125,211,252,0.45)" rx="1"/>
+    <rect x="689" y="325" width="13" height="9" fill="rgba(2,132,199,0.25)" rx="1"/>
+    <rect x="632" y="344" width="13" height="9" fill="rgba(2,132,199,0.3)" rx="1"/>
+    <rect x="651" y="344" width="13" height="9" fill="rgba(125,211,252,0.4)" rx="1"/>
+    <rect x="670" y="344" width="13" height="9" fill="rgba(2,132,199,0.2)" rx="1"/>
+    <rect x="689" y="344" width="13" height="9" fill="rgba(124,58,237,0.15)" rx="1"/>
+    <rect x="632" y="363" width="13" height="9" fill="rgba(125,211,252,0.35)" rx="1"/>
+    <rect x="651" y="363" width="13" height="9" fill="rgba(2,132,199,0.3)" rx="1"/>
+    <rect x="670" y="363" width="13" height="9" fill="rgba(2,132,199,0.25)" rx="1"/>
+    <rect x="689" y="363" width="13" height="9" fill="rgba(125,211,252,0.45)" rx="1"/>
+    <rect x="632" y="382" width="13" height="9" fill="rgba(2,132,199,0.2)" rx="1"/>
+    <rect x="651" y="382" width="13" height="9" fill="rgba(124,58,237,0.15)" rx="1"/>
+    <rect x="670" y="382" width="13" height="9" fill="rgba(125,211,252,0.4)" rx="1"/>
+    <rect x="689" y="382" width="13" height="9" fill="rgba(2,132,199,0.3)" rx="1"/>
+
+    <!-- Right cluster -->
+    <rect x="1292" y="440" width="82" height="340" fill="#dbeafe" stroke="rgba(2,132,199,0.15)" stroke-width="0.8"/>
+    <rect x="1378" y="465" width="62" height="315" fill="#e0f2fe" stroke="rgba(124,58,237,0.12)" stroke-width="0.8"/>
+    <line x1="1333" y1="440" x2="1333" y2="418" stroke="rgba(2,132,199,0.5)" stroke-width="1.5"/>
+    <circle cx="1333" cy="416" r="2.5" fill="#fb7185" opacity="0.7"><animate attributeName="opacity" values="0.7;0.2;0.7" dur="2.3s" repeatCount="indefinite"/></circle>
+    <rect x="1300" y="455" width="11" height="8" fill="rgba(125,211,252,0.4)" rx="1"/>
+    <rect x="1317" y="455" width="11" height="8" fill="rgba(2,132,199,0.25)" rx="1"/>
+    <rect x="1334" y="455" width="11" height="8" fill="rgba(124,58,237,0.15)" rx="1"/>
+    <rect x="1351" y="455" width="11" height="8" fill="rgba(125,211,252,0.35)" rx="1"/>
+    <rect x="1300" y="473" width="11" height="8" fill="rgba(2,132,199,0.3)" rx="1"/>
+    <rect x="1317" y="473" width="11" height="8" fill="rgba(125,211,252,0.4)" rx="1"/>
+    <rect x="1334" y="473" width="11" height="8" fill="rgba(2,132,199,0.2)" rx="1"/>
+    <rect x="1351" y="473" width="11" height="8" fill="rgba(2,132,199,0.25)" rx="1"/>
+  </g>
+
+  <!-- Solar panels on rooftops -->
+  <g transform="translate(65,430)" opacity="0.7">
+    <rect x="0" y="0" width="60" height="9" fill="#bae6fd" stroke="rgba(2,132,199,0.4)" stroke-width="0.6" rx="1"/>
+    <line x1="20" y1="0" x2="20" y2="9" stroke="rgba(2,132,199,0.4)" stroke-width="0.6"/>
+    <line x1="40" y1="0" x2="40" y2="9" stroke="rgba(2,132,199,0.4)" stroke-width="0.6"/>
+    <line x1="0" y1="4.5" x2="60" y2="4.5" stroke="rgba(2,132,199,0.4)" stroke-width="0.6"/>
+  </g>
+
+  <!-- Wind turbines (light) -->
+  <g transform="translate(322, 600)" opacity="0.5">
+    <line x1="0" y1="0" x2="0" y2="80" stroke="rgba(100,140,180,0.5)" stroke-width="2"/>
+    <g><animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="8s" repeatCount="indefinite"/>
+      <line x1="0" y1="0" x2="0" y2="-28" stroke="rgba(100,140,180,0.6)" stroke-width="2" stroke-linecap="round"/>
+      <line x1="0" y1="0" x2="24" y2="14" stroke="rgba(100,140,180,0.6)" stroke-width="2" stroke-linecap="round"/>
+      <line x1="0" y1="0" x2="-24" y2="14" stroke="rgba(100,140,180,0.6)" stroke-width="2" stroke-linecap="round"/>
+    </g>
+  </g>
+  <g transform="translate(385, 585)" opacity="0.4">
+    <line x1="0" y1="0" x2="0" y2="65" stroke="rgba(100,140,180,0.4)" stroke-width="1.5"/>
+    <g><animateTransform attributeName="transform" type="rotate" from="120 0 0" to="480 0 0" dur="10s" repeatCount="indefinite"/>
+      <line x1="0" y1="0" x2="0" y2="-22" stroke="rgba(100,140,180,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="0" y1="0" x2="19" y2="11" stroke="rgba(100,140,180,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="0" y1="0" x2="-19" y2="11" stroke="rgba(100,140,180,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+  </g>
+  <g transform="translate(1102, 588)" opacity="0.45">
+    <line x1="0" y1="0" x2="0" y2="72" stroke="rgba(100,140,180,0.45)" stroke-width="2"/>
+    <g><animateTransform attributeName="transform" type="rotate" from="240 0 0" to="600 0 0" dur="9s" repeatCount="indefinite"/>
+      <line x1="0" y1="0" x2="0" y2="-25" stroke="rgba(100,140,180,0.55)" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="0" y1="0" x2="22" y2="12" stroke="rgba(100,140,180,0.55)" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="0" y1="0" x2="-22" y2="12" stroke="rgba(100,140,180,0.55)" stroke-width="1.8" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- Ground / road -->
+  <rect x="0" y="768" width="1440" height="132" fill="#e0f7f0"/>
+  <rect x="0" y="768" width="1440" height="3" fill="rgba(2,132,199,0.1)"/>
+  <!-- Road lanes -->
+  <rect x="0" y="800" width="1440" height="60" fill="#c7d2e8" opacity="0.5"/>
+  <line x1="0" y1="815" x2="1440" y2="815" stroke="rgba(255,255,255,0.7)" stroke-width="1" stroke-dasharray="30,20"/>
+  <line x1="0" y1="800" x2="1440" y2="800" stroke="rgba(2,132,199,0.15)" stroke-width="1"/>
+  <line x1="0" y1="860" x2="1440" y2="860" stroke="rgba(2,132,199,0.1)" stroke-width="1"/>
+
+  <!-- Street lights (daytime, subtle) -->
+  <g stroke="rgba(100,140,180,0.4)" stroke-width="1.2" fill="none">
+    <line x1="200" y1="768" x2="200" y2="730"/><path d="M200,730 Q200,720 215,720" stroke-width="1.5"/>
+    <circle cx="217" cy="720" r="3" fill="rgba(251,191,36,0.3)"/>
+    <line x1="450" y1="768" x2="450" y2="730"/><path d="M450,730 Q450,720 465,720" stroke-width="1.5"/>
+    <circle cx="467" cy="720" r="3" fill="rgba(251,191,36,0.3)"/>
+    <line x1="750" y1="768" x2="750" y2="730"/><path d="M750,730 Q750,720 765,720" stroke-width="1.5"/>
+    <circle cx="767" cy="720" r="3" fill="rgba(251,191,36,0.3)"/>
+    <line x1="1000" y1="768" x2="1000" y2="730"/><path d="M1000,730 Q1000,720 1015,720" stroke-width="1.5"/>
+    <circle cx="1017" cy="720" r="3" fill="rgba(251,191,36,0.3)"/>
+    <line x1="1250" y1="768" x2="1250" y2="730"/><path d="M1250,730 Q1250,720 1265,720" stroke-width="1.5"/>
+    <circle cx="1267" cy="720" r="3" fill="rgba(251,191,36,0.3)"/>
+  </g>
+
+  <!-- Trees (bright green) -->
+  <g transform="translate(262,730)" opacity="0.8">
+    <line x1="0" y1="0" x2="0" y2="38" stroke="#6b7280" stroke-width="3"/>
+    <ellipse cx="0" cy="-2" rx="14" ry="18" fill="#34d399" opacity="0.7"/>
+    <ellipse cx="0" cy="-12" rx="10" ry="14" fill="#10b981" opacity="0.8"/>
+    <ellipse cx="0" cy="-22" rx="7" ry="10" fill="#059669" opacity="0.9"/>
+  </g>
+  <g transform="translate(284,740)" opacity="0.7">
+    <line x1="0" y1="0" x2="0" y2="28" stroke="#6b7280" stroke-width="2"/>
+    <ellipse cx="0" cy="-2" rx="10" ry="14" fill="#34d399" opacity="0.7"/>
+    <ellipse cx="0" cy="-10" rx="7" ry="10" fill="#10b981" opacity="0.8"/>
+  </g>
+  <g transform="translate(982,732)" opacity="0.8">
+    <line x1="0" y1="0" x2="0" y2="36" stroke="#6b7280" stroke-width="3"/>
+    <ellipse cx="0" cy="-2" rx="15" ry="19" fill="#34d399" opacity="0.7"/>
+    <ellipse cx="0" cy="-13" rx="11" ry="15" fill="#10b981" opacity="0.8"/>
+    <ellipse cx="0" cy="-24" rx="7" ry="10" fill="#059669" opacity="0.9"/>
+  </g>
+  <g transform="translate(1045,742)" opacity="0.7">
+    <line x1="0" y1="0" x2="0" y2="26" stroke="#6b7280" stroke-width="2"/>
+    <ellipse cx="0" cy="-2" rx="9" ry="13" fill="#34d399" opacity="0.7"/>
+    <ellipse cx="0" cy="-10" rx="7" ry="9" fill="#10b981" opacity="0.8"/>
+  </g>
+
+  <!-- Birds (small V shapes flying) -->
+  <g opacity="0.35" stroke="rgba(30,60,100,0.5)" stroke-width="1.2" fill="none">
+    <path d="M500,200 Q505,196 510,200"/><path d="M513,197 Q518,193 523,197"/>
+    <path d="M700,160 Q706,155 712,160"/><path d="M715,157 Q721,152 727,157"/>
+    <path d="M900,220 Q904,217 908,220"/>
+  </g>
+
+  <!-- Data stream lines (light blue, subtle) -->
+  <g opacity="0.1">
+    <line x1="0" y1="650" x2="1440" y2="650" stroke="rgba(2,132,199,0.8)" stroke-width="0.6" stroke-dasharray="4,40">
+      <animate attributeName="stroke-dashoffset" from="0" to="-44" dur="2s" repeatCount="indefinite"/>
+    </line>
+    <line x1="0" y1="680" x2="1440" y2="680" stroke="rgba(124,58,237,0.7)" stroke-width="0.6" stroke-dasharray="4,60">
+      <animate attributeName="stroke-dashoffset" from="0" to="-64" dur="3s" repeatCount="indefinite"/>
+    </line>
+    <line x1="0" y1="710" x2="1440" y2="710" stroke="rgba(5,150,105,0.7)" stroke-width="0.6" stroke-dasharray="4,50">
+      <animate attributeName="stroke-dashoffset" from="0" to="-54" dur="2.5s" repeatCount="indefinite"/>
+    </line>
+  </g>
+
+  <!-- Hex overlay -->
+  <rect width="1440" height="900" fill="url(#hexPat)" opacity="0.5"/>
+</svg>
+</div>
+
+<!-- HAMBURGER (mobile) -->
+<button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Menu">
+  <i class="fas fa-bars" id="hamburgerIcon"></i>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-top">
+    <div class="brand">
+      <div class="brand-icon"><i class="fas fa-microchip"></i></div>
+      <div>
+        <div class="brand-name">SMART CITY</div>
+        <div class="brand-sub">DASHBOARD</div>
+      </div>
+    </div>
+    <div class="status-bar">
+      <div class="pulse" id="sDot"></div>
+      <span class="status-text" id="sTxt">CONNECTING</span>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-section-label">Navigation</div>
+    <div class="nav-item active" onclick="goto('overview',this)">
+      <i class="fas fa-th-large"></i><span>Overview</span>
+    </div>
+    <div class="nav-section-label">Models</div>
+    <div class="nav-item" onclick="goto('house',this)">
+      <i class="fas fa-home"></i><span>House Price</span>
+      <div class="nav-dot house-dot"></div>
+    </div>
+    <div class="nav-item" onclick="goto('traffic',this)">
+      <i class="fas fa-traffic-light"></i><span>Traffic</span>
+      <div class="nav-dot traffic-dot"></div>
+    </div>
+    <div class="nav-item" onclick="goto('crime',this)">
+      <i class="fas fa-shield-alt"></i><span>Crime Risk</span>
+      <div class="nav-dot crime-dot"></div>
+    </div>
+    <div class="nav-item" onclick="goto('citizen',this)">
+      <i class="fas fa-users"></i><span>Citizens</span>
+      <div class="nav-dot citizen-dot"></div>
+    </div>
+    <div class="nav-section-label">Info</div>
+    <div class="nav-item" onclick="goto('team',this)">
+      <i class="fas fa-user-astronaut"></i><span>Team</span>
+    </div>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="server-pill">
+      <i class="fas fa-server"></i>
+      <span>localhost:5000</span>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="pgTitle">Overview</div>
+      <div class="page-sub" id="pgSub">Smart City Analytic System</div>
+    </div>
+    <div class="topbar-right">
+      <div class="stat-pill c-cyan"><span>Models</span><span class="val">4 / 4</span></div>
+      <div class="stat-pill c-emerald"><span>Accuracy</span><span class="val">96.89%</span></div>
+      <div class="stat-pill c-violet"><span>Mode</span><span class="val">LIVE</span></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- OVERVIEW PANEL -->
+    <div class="panel active" id="panel-overview">
+      <div class="panel-scroll">
+        <div class="kpi-row">
+          <div class="kpi"><div class="kpi-label">Models</div><div class="kpi-val">04</div><div class="kpi-sub">All active</div></div>
+          <div class="kpi"><div class="kpi-label">Max Accuracy</div><div class="kpi-val">96<span style="font-size:1.2rem">%</span></div><div class="kpi-sub">Traffic SVM</div></div>
+          <div class="kpi"><div class="kpi-label">Team Size</div><div class="kpi-val">10</div><div class="kpi-sub">B.Tech (C.S.E) Sec - D</div></div>
+          <div class="kpi"><div class="kpi-label">Uptime</div><div class="kpi-val">24/7</div><div class="kpi-sub">Real-time</div></div>
+        </div>
+        <div class="section-head"><h2>AI Modules</h2><span>Click to open</span></div>
+        <div class="module-grid">
+          <div class="mod-card" onclick="goto('house',document.querySelector('.nav-item:nth-child(4)'))">
+            <div class="mod-ico c"><i class="fas fa-home"></i></div>
+            <div><div class="mod-name">House Price Engine</div><div class="mod-desc">Predict property value using Linear Regression based on size, location & quality</div></div>
+            <div class="mod-acc c">REGRESSION</div>
+          </div>
+          <div class="mod-card" onclick="goto('traffic',document.querySelector('.nav-item:nth-child(5)'))">
+            <div class="mod-ico e"><i class="fas fa-traffic-light"></i></div>
+            <div><div class="mod-name">Traffic Analyzer</div><div class="mod-desc">Real-time traffic classification using SVM with 96.89% accuracy across Indian cities</div></div>
+            <div class="mod-acc e">96.89%</div>
+          </div>
+          <div class="mod-card" onclick="goto('crime',document.querySelector('.nav-item:nth-child(6)'))">
+            <div class="mod-ico r"><i class="fas fa-shield-alt"></i></div>
+            <div><div class="mod-name">Crime Risk Analyzer</div><div class="mod-desc">Assess urban crime risk using Logistic Regression on demographic & historical data</div></div>
+            <div class="mod-acc r">CLASSIFIER</div>
+          </div>
+          <div class="mod-card" onclick="goto('citizen',document.querySelector('.nav-item:nth-child(7)'))">
+            <div class="mod-ico v"><i class="fas fa-users"></i></div>
+            <div><div class="mod-name">Citizen Segmentation</div><div class="mod-desc">Classify citizens into segments using Random Forest on income, education & digital usage</div></div>
+            <div class="mod-acc v">85%+</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOUSE PANEL -->
+    <div class="panel" id="panel-house">
+      <div class="panel-scroll">
+        <div class="section-head"><h2>House Price Engine</h2><span>Linear Regression Model</span></div>
+        <div style="max-width:700px;">
+          <div class="card house">
+            <div class="card-header">
+              <div class="card-title-wrap">
+                <div class="card-icon"><i class="fas fa-home"></i></div>
+                <div><div class="card-name">PROPERTY VALUATION</div><div class="card-sub">Enter property details below</div></div>
+              </div>
+              <span class="badge">LINEAR REGRESSION</span>
+            </div>
+            <div class="card-body">
+              <form id="houseForm">
+                <div class="fg fg2">
+                  <div class="field"><label>Sq. Footage</label><input type="number" step="any" id="houseSqft" placeholder="2500" required></div>
+                  <div class="field"><label>Bedrooms</label><input type="number" step="any" id="houseBeds" placeholder="3" required></div>
+                  <div class="field"><label>Bathrooms</label><input type="number" step="any" id="houseBaths" placeholder="2" required></div>
+                  <div class="field"><label>Lot Size</label><input type="number" step="any" id="houseLot" placeholder="3.5" required></div>
+                </div>
+                <div class="fg fg1" style="margin-bottom:16px;">
+                  <div class="field"><label>Neighborhood Quality (1–10)</label><input type="number" step="any" id="houseQuality" placeholder="8" min="1" max="10" required></div>
+                </div>
+                <button type="button" class="btn-random" onclick="randomSample('house')"><i class="fas fa-random"></i> &nbsp; RANDOM FROM DATASET <span class="row-badge" id="houseRowBadge"></span></button>
+                <button type="button" class="btn-default" onclick="loadDefault('house')"><i class="fas fa-database"></i> &nbsp; LOAD DEFAULT DATA</button>
+                <button type="submit" class="btn"><i class="fas fa-calculator"></i> &nbsp; PREDICT PRICE</button>
+              </form>
+              <div class="result" id="houseResult"></div>
+              <div id="houseCharts" style="display:none;" class="chart-section">
+                <div class="chart-section-title"><i class="fas fa-chart-bar" style="color:var(--cyan)"></i> Dataset Analysis — House Price</div>
+                <div class="chart-grid">
+                  <div class="chart-box"><h4>Price Distribution (Bar)</h4><canvas id="houseBarChart"></canvas></div>
+                  <div class="chart-box"><h4>Neighborhood Quality Mix (Pie)</h4><canvas id="housePieChart"></canvas></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRAFFIC PANEL -->
+    <div class="panel" id="panel-traffic">
+      <div class="panel-scroll">
+        <div class="section-head"><h2>Traffic Analyzer</h2><span>SVM — 96.89% Accuracy</span></div>
+        <div style="max-width:800px;">
+          <div class="card traffic">
+            <div class="card-header">
+              <div class="card-title-wrap">
+                <div class="card-icon"><i class="fas fa-traffic-light"></i></div>
+                <div><div class="card-name">TRAFFIC STATUS PREDICTION</div><div class="card-sub">Indian city road conditions</div></div>
+              </div>
+              <span class="badge">SVM 96.89%</span>
+            </div>
+            <div class="card-body">
+              <form id="trafficForm">
+                <div class="fg fg3">
+                  <div class="field"><label>City</label><input type="text" id="trafficCity" placeholder="Mumbai" required></div>
+                  <div class="field"><label>Area Code</label><input type="number" step="any" id="trafficAreaCode" placeholder="400001" required></div>
+                  <div class="field"><label>Population Density</label><input type="number" step="any" id="trafficPopDensity" placeholder="5000" required></div>
+                  <div class="field"><label>Vehicles / Hr</label><input type="number" step="any" id="trafficVehicles" placeholder="1000" required></div>
+                  <div class="field"><label>Traffic Signals</label><input type="number" step="any" id="trafficSignals" placeholder="5" required></div>
+                  <div class="field"><label>Weather</label>
+                    <select id="trafficWeather"><option>Clear</option><option>Rain</option><option>Fog</option></select>
+                  </div>
+                  <div class="field"><label>Time of Day</label>
+                    <select id="trafficTime"><option>Morning</option><option>Afternoon</option><option>Evening</option><option>Night</option></select>
+                  </div>
+                  <div class="field"><label>Day Type</label>
+                    <select id="trafficDayType"><option>Weekday</option><option>Weekend</option></select>
+                  </div>
+                  <div class="field"><label>Road Type</label>
+                    <select id="trafficRoadType"><option>Highway</option><option>Main Road</option><option>Street</option></select>
+                  </div>
+                </div>
+                <button type="button" class="btn-random" onclick="randomSample('traffic')"><i class="fas fa-random"></i> &nbsp; RANDOM FROM DATASET <span class="row-badge" id="trafficRowBadge"></span></button>
+                <button type="button" class="btn-default" onclick="loadDefault('traffic')"><i class="fas fa-database"></i> &nbsp; LOAD DEFAULT DATA</button>
+                <button type="submit" class="btn"><i class="fas fa-road"></i> &nbsp; ANALYZE TRAFFIC</button>
+              </form>
+              <div class="result" id="trafficResult"></div>
+              <div id="trafficCharts" style="display:none;" class="chart-section">
+                <div class="chart-section-title"><i class="fas fa-chart-pie" style="color:var(--sage)"></i> Dataset Analysis — Traffic</div>
+                <div class="chart-grid">
+                  <div class="chart-box"><h4>Traffic High vs Low by City (Bar)</h4><canvas id="trafficBarChart"></canvas></div>
+                  <div class="chart-box"><h4>Weather Conditions (Pie)</h4><canvas id="trafficPieChart"></canvas></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CRIME PANEL -->
+    <div class="panel" id="panel-crime">
+      <div class="panel-scroll">
+        <div class="section-head"><h2>Crime Risk Analyzer</h2><span>Logistic Regression Model</span></div>
+        <div style="max-width:800px;">
+          <div class="card crime">
+            <div class="card-header">
+              <div class="card-title-wrap">
+                <div class="card-icon"><i class="fas fa-shield-alt"></i></div>
+                <div><div class="card-name">URBAN CRIME RISK ASSESSMENT</div><div class="card-sub">Demographic & historical analysis</div></div>
+              </div>
+              <span class="badge">LOGISTIC REG.</span>
+            </div>
+            <div class="card-body">
+              <form id="crimeForm">
+                <div class="fg fg3">
+                  <div class="field"><label>City</label><input type="text" id="crimeCity" placeholder="Mumbai" required></div>
+                  <div class="field"><label>Area Code</label><input type="number" step="any" id="crimeAreaCode" placeholder="1" required></div>
+                  <div class="field"><label>Population</label><input type="number" step="any" id="crimePopulation" placeholder="50000" required></div>
+                  <div class="field"><label>Unemployment %</label><input type="number" step="any" id="crimeUnemployment" placeholder="5.5" required></div>
+                  <div class="field"><label>Police Stations</label><input type="number" step="any" id="crimePoliceStations" placeholder="10" required></div>
+                  <div class="field"><label>Time (0–23 hr)</label><input type="number" step="any" id="crimeTime" placeholder="14" min="0" max="23" required></div>
+                  <div class="field"><label>Victim Age</label><input type="number" step="any" id="crimeVictimAge" placeholder="35" required></div>
+                  <div class="field"><label>Victim Gender</label>
+                    <select id="crimeVictimGender"><option>Male</option><option>Female</option></select>
+                  </div>
+                  <div class="field"><label>Weapon Used</label>
+                    <select id="crimeWeapon"><option>None</option><option>Gun</option><option>Knife</option><option>Other</option></select>
+                  </div>
+                </div>
+                <div class="fg fg1" style="margin-bottom:16px;">
+                  <div class="field"><label>Past Crime Rate (%)</label><input type="number" step="any" id="crimePastRate" placeholder="15.2" required></div>
+                </div>
+                <button type="button" class="btn-random" onclick="randomSample('crime')"><i class="fas fa-random"></i> &nbsp; RANDOM FROM DATASET <span class="row-badge" id="crimeRowBadge"></span></button>
+                <button type="button" class="btn-default" onclick="loadDefault('crime')"><i class="fas fa-database"></i> &nbsp; LOAD DEFAULT DATA</button>
+                <button type="submit" class="btn"><i class="fas fa-exclamation-triangle"></i> &nbsp; ASSESS RISK</button>
+              </form>
+              <div class="result" id="crimeResult"></div>
+              <div id="crimeCharts" style="display:none;" class="chart-section">
+                <div class="chart-section-title"><i class="fas fa-chart-bar" style="color:var(--coral)"></i> Dataset Analysis — Crime Risk</div>
+                <div class="chart-grid">
+                  <div class="chart-box"><h4>Crime Occurred by City (Bar)</h4><canvas id="crimeBarChart"></canvas></div>
+                  <div class="chart-box"><h4>Weapon Type Distribution (Pie)</h4><canvas id="crimePieChart"></canvas></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CITIZEN PANEL -->
+    <div class="panel" id="panel-citizen">
+      <div class="panel-scroll">
+        <div class="section-head"><h2>Citizen Segmentation</h2><span>Random Forest — 85%+ Accuracy</span></div>
+        <div style="max-width:800px;">
+          <div class="card citizen">
+            <div class="card-header">
+              <div class="card-title-wrap">
+                <div class="card-icon"><i class="fas fa-users"></i></div>
+                <div><div class="card-name">CITIZEN PROFILE CLASSIFIER</div><div class="card-sub">Urban demographic segmentation</div></div>
+              </div>
+              <span class="badge">SVM 85%+</span>
+            </div>
+            <div class="card-body">
+              <form id="citizenForm">
+                <div class="fg fg3">
+                  <div class="field"><label>City</label><input type="text" id="citizenCity" placeholder="Lucknow" required></div>
+                  <div class="field"><label>Age</label><input type="number" step="any" id="citizenAge" placeholder="35" required></div>
+                  <div class="field"><label>Monthly Income (₹)</label><input type="number" step="any" id="citizenIncome" placeholder="85000" required></div>
+                  <div class="field"><label>Education</label>
+                    <select id="citizenEdu"><option>Secondary</option><option>Graduate</option><option>Postgraduate</option></select>
+                  </div>
+                  <div class="field"><label>Employment</label>
+                    <select id="citizenEmp"><option>Private</option><option>Government</option><option>Unemployed</option></select>
+                  </div>
+                  <div class="field"><label>Digital Hrs / Day</label><input type="number" step="any" id="citizenDigital" placeholder="6.5" required></div>
+                  <div class="field"><label>Household Size</label><input type="number" step="any" id="citizenHousehold" placeholder="3" required></div>
+                  <div class="field"><label>Area Type</label>
+                    <select id="citizenArea"><option>Urban</option><option>Rural</option><option>Semi-Urban</option></select>
+                  </div>
+                  <div class="field"><label>Govt Schemes Used</label><input type="number" step="any" id="citizenScheme" placeholder="2" required></div>
+                </div>
+                <button type="button" class="btn-random" onclick="randomSample('citizen')"><i class="fas fa-random"></i> &nbsp; RANDOM FROM DATASET <span class="row-badge" id="citizenRowBadge"></span></button>
+                <button type="button" class="btn-default" onclick="loadDefault('citizen')"><i class="fas fa-database"></i> &nbsp; LOAD DEFAULT DATA</button>
+                <button type="submit" class="btn"><i class="fas fa-user-tag"></i> &nbsp; SEGMENT CITIZEN</button>
+              </form>
+              <div class="result" id="citizenResult"></div>
+              <div id="citizenCharts" style="display:none;" class="chart-section">
+                <div class="chart-section-title"><i class="fas fa-chart-pie" style="color:var(--violet)"></i> Dataset Analysis — Citizen Segments</div>
+                <div class="chart-grid">
+                  <div class="chart-box"><h4>Segment Distribution by Area (Bar)</h4><canvas id="citizenBarChart"></canvas></div>
+                  <div class="chart-box"><h4>Employment Type Split (Pie)</h4><canvas id="citizenPieChart"></canvas></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEAM PANEL -->
+    <div class="panel" id="panel-team">
+      <div class="panel-scroll">
+        <div class="section-head"><h2>Team Members</h2><span>B.Tech (C.S.E) — IIoT Semester 4 (Sec - D)</span></div>
+        <div class="team-grid">
+          <div class="tm lead"><div class="av v">YS</div><div class="tm-name">Yash Sharma</div><div class="tm-roll">BCS2024221</div><span class="tm-badge">TEAM LEADER</span></div>
+          <div class="tm"><div class="av c">MY</div><div class="tm-name">Manjesh Yadav</div><div class="tm-roll">BCS2024213</div></div>
+          <div class="tm"><div class="av e">MS</div><div class="tm-name">Mayuri Singh</div><div class="tm-roll">BCS2024220</div></div>
+          <div class="tm"><div class="av a">MU</div><div class="tm-name">M. Anas Usmani</div><div class="tm-roll">BCS2024224</div></div>
+          <div class="tm"><div class="av c">LG</div><div class="tm-name">Lucky Gangwar</div><div class="tm-roll">BCS2024233</div></div>
+          <div class="tm"><div class="av e">AT</div><div class="tm-name">Abhinav Tiwari</div><div class="tm-roll">BCS2024243</div></div>
+          <div class="tm"><div class="av a">MU</div><div class="tm-name">Mohd Uzair</div><div class="tm-roll">BCS2024255</div></div>
+          <div class="tm"><div class="av v">VS</div><div class="tm-name">Vansh Saxena</div><div class="tm-roll">BCS2024256</div></div>
+          <div class="tm"><div class="av c">AS</div><div class="tm-name">Aanya Srivastava</div><div class="tm-roll">BCS2024257</div></div>
+          <div class="tm"><div class="av e">MV</div><div class="tm-name">Manan Vashishtha</div><div class="tm-roll">BCS2024263</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const API='http://localhost:5000';
+const titles={overview:'Overview',house:'House Price Engine',traffic:'Traffic Analyzer',crime:'Crime Risk Analyzer',citizen:'Citizen Segmentation',team:'Team'};
+const subs={overview:'Smart City Analytic System',house:'Linear Regression • Property Valuation',traffic:'SVM • 96.89% Accuracy',crime:'Logistic Regression • Risk Assessment',citizen:'Random Forest • Urban Segmentation',team:'IIoT-4 Project'};
+
+function goto(id, el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+  document.getElementById('pgTitle').textContent=titles[id]||id;
+  document.getElementById('pgSub').textContent=subs[id]||'';
+}
+
+async function ping(){
+  const dot=document.getElementById('sDot'),txt=document.getElementById('sTxt');
+  try{
+    const r=await fetch(API+'/');
+    if(r.ok){dot.classList.remove('off');txt.textContent='ONLINE';}
+    else throw 0;
+  }catch{dot.classList.add('off');txt.textContent='OFFLINE';}
+}
+ping();setInterval(ping,5000);
+
+// Chart instances storage
+const chartInstances = {};
+function destroyChart(id){if(chartInstances[id]){chartInstances[id].destroy();delete chartInstances[id];}}
+
+async function call(ep,data,rid){
+  const b=document.getElementById(rid);
+  b.className='result busy';b.innerHTML='<i class="fas fa-circle-notch fa-spin"></i>  Processing...';
+  try{
+    const r=await fetch(API+ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    const j=await r.json();
+    if(j.success){
+      let m='';
+      if(ep==='/predict/house_price') m=`<i class="fas fa-check-circle"></i>  PREDICTED: $${j.predicted_price.toLocaleString()}`;
+      else if(ep==='/predict/traffic') m=`<i class="fas fa-check-circle"></i>  ${j.traffic_status}`;
+      else if(ep==='/predict/crime')   m=`<i class="fas fa-check-circle"></i>  RISK LEVEL: ${j.risk_level}`;
+      else if(ep==='/predict/citizen') m=`<i class="fas fa-check-circle"></i>  SEGMENT: ${j.segment_label}`;
+      b.className='result ok';b.innerHTML=m;
+    }else{b.className='result err';b.innerHTML=`<i class="fas fa-exclamation-triangle"></i>  ${j.error}`;}
+  }catch{
+    b.className='result busy';b.innerHTML='<i class="fas fa-info-circle"></i>  Backend offline — Dataset Charts Shown Below';
+  }
+  // Always render charts after any submit
+  if(ep==='/predict/house_price') await renderHouseCharts();
+  else if(ep==='/predict/traffic') await renderTrafficCharts();
+  else if(ep==='/predict/crime') await renderCrimeCharts();
+  else if(ep==='/predict/citizen') await renderCitizenCharts();
+}
+
+/* ======== CHART HELPERS ======== */
+const CHART_OPTS_BASE = {
+  responsive:true, maintainAspectRatio:true,
+  plugins:{legend:{labels:{font:{family:'DM Mono, monospace',size:10},color:'#3d2c1e',boxWidth:14}}},
+};
+
+/* ======================================================
+   CHART RENDER FUNCTIONS — data fetched from backend
+   ====================================================== */
+
+async function fetchStats(endpoint, payload){
+  try{
+    const r = await fetch(API + endpoint, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const j = await r.json();
+    return j.success ? j : null;
+  }catch{ return null; }
+}
+
+function highlightColors(labels, selected, baseColor, highlightColor){
+  return labels.map(l => l === selected ? highlightColor : baseColor);
+}
+
+function highlightBorders(labels, selected, highlightColor){
+  return labels.map(l => l === selected ? highlightColor : 'rgba(250,247,242,0.95)');
+}
+
+function highlightWidths(labels, selected){ return labels.map(l => l===selected ? 3 : 2); }
+
+async function renderHouseCharts(){
+  document.getElementById('houseCharts').style.display='block';
+  const sel = lastSelected.house;
+  const payload = sel ? {Square_Footage:+sel.Square_Footage, Neighborhood_Quality:+sel.Neighborhood_Quality} : {};
+  const d = await fetchStats('/stats/house', payload);
+  if(!d) return;
+
+  // Bar: Avg Price per Sqft bucket — highlight selected row's bucket
+  destroyChart('hB');
+  chartInstances['hB']=new Chart(document.getElementById('houseBarChart'),{type:'bar',
+    data:{labels:d.bar.labels.map(l=>'Sqft '+l),datasets:[{label:'Avg Price ($k)',data:d.bar.values,
+      backgroundColor:d.bar.labels.map(l=>l===d.bar.selected?'rgba(224,92,58,0.95)':'rgba(14,116,144,0.38)'),
+      borderRadius:6,borderSkipped:false}]},
+    options:{...CHART_OPTS_BASE,plugins:{...CHART_OPTS_BASE.plugins,legend:{display:false}},
+      scales:{y:{ticks:{color:'#3d2c1e',font:{size:10}},grid:{color:'rgba(180,120,70,0.08)'}},
+              x:{ticks:{color:'#3d2c1e',font:{size:9}},grid:{display:false}}}}
+  });
+
+  // Pie: Neighborhood Quality — highlight selected row's bucket
+  destroyChart('hP');
+  chartInstances['hP']=new Chart(document.getElementById('housePieChart'),{type:'doughnut',
+    data:{labels:d.pie.labels,datasets:[{data:d.pie.values,
+      backgroundColor:highlightColors(d.pie.labels,d.pie.selected,'rgba(14,116,144,0.32)','rgba(224,92,58,0.92)'),
+      borderWidth:highlightWidths(d.pie.labels,d.pie.selected),
+      borderColor:highlightBorders(d.pie.labels,d.pie.selected,'rgba(224,92,58,0.95)')}]},
+    options:{...CHART_OPTS_BASE}
+  });
+}
+
+async function renderTrafficCharts(){
+  document.getElementById('trafficCharts').style.display='block';
+  const sel = lastSelected.traffic;
+  const payload = sel ? {City:sel.City, Weather:sel.Weather} : {};
+  const d = await fetchStats('/stats/traffic', payload);
+  if(!d) return;
+
+  // Bar: High/Low per city — highlight selected city
+  destroyChart('tB');
+  chartInstances['tB']=new Chart(document.getElementById('trafficBarChart'),{type:'bar',
+    data:{labels:d.bar.labels,datasets:[
+      {label:'High',data:d.bar.high,
+        backgroundColor:d.bar.labels.map(c=>c===d.bar.selected?'rgba(224,92,58,0.95)':'rgba(224,92,58,0.28)'),
+        borderRadius:4,borderWidth:d.bar.labels.map(c=>c===d.bar.selected?2:0),borderColor:'rgba(224,92,58,1)'},
+      {label:'Low', data:d.bar.low,
+        backgroundColor:d.bar.labels.map(c=>c===d.bar.selected?'rgba(74,124,89,0.95)':'rgba(74,124,89,0.28)'),
+        borderRadius:4,borderWidth:d.bar.labels.map(c=>c===d.bar.selected?2:0),borderColor:'rgba(74,124,89,1)'}
+    ]},
+    options:{...CHART_OPTS_BASE,scales:{y:{ticks:{color:'#3d2c1e',font:{size:10}},grid:{color:'rgba(180,120,70,0.08)'}},
+      x:{ticks:{color:'#3d2c1e',font:{size:8}},grid:{display:false}}}}
+  });
+
+  // Pie: Weather — highlight selected row's weather
+  const wxHighColors=['rgba(251,191,36,0.95)','rgba(14,116,144,0.92)','rgba(100,116,139,0.92)'];
+  const wxBaseColors=['rgba(251,191,36,0.32)','rgba(14,116,144,0.32)','rgba(148,163,184,0.32)'];
+  destroyChart('tP');
+  chartInstances['tP']=new Chart(document.getElementById('trafficPieChart'),{type:'pie',
+    data:{labels:d.pie.labels,datasets:[{data:d.pie.values,
+      backgroundColor:d.pie.labels.map((k,i)=>k===d.pie.selected?wxHighColors[i]:wxBaseColors[i]),
+      borderWidth:highlightWidths(d.pie.labels,d.pie.selected),
+      borderColor:d.pie.labels.map((k,i)=>k===d.pie.selected?wxHighColors[i]:'rgba(250,247,242,0.95)')}]},
+    options:{...CHART_OPTS_BASE}
+  });
+}
+
+async function renderCrimeCharts(){
+  document.getElementById('crimeCharts').style.display='block';
+  const sel = lastSelected.crime;
+  const payload = sel ? {City:sel.City, Weapon_Used:sel.Weapon_Used} : {};
+  const d = await fetchStats('/stats/crime', payload);
+  if(!d) return;
+
+  // Bar: Crimes per city — highlight selected city
+  destroyChart('cB');
+  chartInstances['cB']=new Chart(document.getElementById('crimeBarChart'),{type:'bar',
+    data:{labels:d.bar.labels,datasets:[{label:'Crimes',data:d.bar.values,
+      backgroundColor:d.bar.labels.map(c=>c===d.bar.selected?'rgba(220,38,38,0.95)':'rgba(224,92,58,0.28)'),
+      borderWidth:d.bar.labels.map(c=>c===d.bar.selected?2:0),borderColor:'rgba(200,30,30,1)',
+      borderRadius:5,borderSkipped:false}]},
+    options:{...CHART_OPTS_BASE,plugins:{...CHART_OPTS_BASE.plugins,legend:{display:false}},
+      scales:{y:{ticks:{color:'#3d2c1e',font:{size:10}},grid:{color:'rgba(180,120,70,0.08)'}},
+              x:{ticks:{color:'#3d2c1e',font:{size:8}},grid:{display:false}}}}
+  });
+
+  // Pie: Weapon — highlight selected weapon
+  const wpHighColors=['rgba(148,163,184,0.95)','rgba(220,38,38,0.92)','rgba(124,58,237,0.9)','rgba(249,115,22,0.92)'];
+  const wpBaseColors=['rgba(148,163,184,0.28)','rgba(220,38,38,0.28)','rgba(124,58,237,0.28)','rgba(249,115,22,0.28)'];
+  destroyChart('cP');
+  chartInstances['cP']=new Chart(document.getElementById('crimePieChart'),{type:'doughnut',
+    data:{labels:d.pie.labels,datasets:[{data:d.pie.values,
+      backgroundColor:d.pie.labels.map((k,i)=>k===d.pie.selected?wpHighColors[i]:wpBaseColors[i]),
+      borderWidth:highlightWidths(d.pie.labels,d.pie.selected),
+      borderColor:d.pie.labels.map((k,i)=>k===d.pie.selected?wpHighColors[i]:'rgba(250,247,242,0.95)')}]},
+    options:{...CHART_OPTS_BASE}
+  });
+}
+
+async function renderCitizenCharts(){
+  document.getElementById('citizenCharts').style.display='block';
+  const sel = lastSelected.citizen;
+  const payload = sel ? {Area_Type:sel.Area_Type, Employment_Type:sel.Employment_Type} : {};
+  const d = await fetchStats('/stats/citizen', payload);
+  if(!d) return;
+
+  // Bar: Segment 0/1 per Area Type — highlight selected area
+  destroyChart('ctB');
+  chartInstances['ctB']=new Chart(document.getElementById('citizenBarChart'),{type:'bar',
+    data:{labels:d.bar.labels,datasets:[
+      {label:'Segment 1',data:d.bar.seg1,
+        backgroundColor:d.bar.labels.map(a=>a===d.bar.selected?'rgba(124,58,237,0.95)':'rgba(124,58,237,0.28)'),
+        borderRadius:5,borderWidth:d.bar.labels.map(a=>a===d.bar.selected?2:0),borderColor:'rgba(124,58,237,1)'},
+      {label:'Segment 0',data:d.bar.seg0,
+        backgroundColor:d.bar.labels.map(a=>a===d.bar.selected?'rgba(196,181,253,0.95)':'rgba(196,181,253,0.28)'),
+        borderRadius:5,borderWidth:d.bar.labels.map(a=>a===d.bar.selected?2:0),borderColor:'rgba(196,181,253,1)'}
+    ]},
+    options:{...CHART_OPTS_BASE,scales:{y:{ticks:{color:'#3d2c1e',font:{size:10}},grid:{color:'rgba(180,120,70,0.08)'}},
+      x:{ticks:{color:'#3d2c1e',font:{size:10}},grid:{display:false}}}}
+  });
+
+  // Pie: Employment — highlight selected employment type
+  const emHighColors=['rgba(124,58,237,0.95)','rgba(14,116,144,0.92)','rgba(224,92,58,0.92)','rgba(251,191,36,0.95)'];
+  const emBaseColors=['rgba(124,58,237,0.28)','rgba(14,116,144,0.28)','rgba(224,92,58,0.28)','rgba(251,191,36,0.28)'];
+  destroyChart('ctP');
+  chartInstances['ctP']=new Chart(document.getElementById('citizenPieChart'),{type:'pie',
+    data:{labels:d.pie.labels,datasets:[{data:d.pie.values,
+      backgroundColor:d.pie.labels.map((k,i)=>k===d.pie.selected?emHighColors[i]:emBaseColors[i]),
+      borderWidth:highlightWidths(d.pie.labels,d.pie.selected),
+      borderColor:d.pie.labels.map((k,i)=>k===d.pie.selected?emHighColors[i]:'rgba(250,247,242,0.95)')}]},
+    options:{...CHART_OPTS_BASE}
+  });
+}
+
+function loadDefault(form){
+  if(form==='house'){
+    // Dataset row 0: Square_Footage=1360, Num_Bedrooms=2, Num_Bathrooms=1, Lot_Size=0.60, Neighborhood_Quality=5
+    document.getElementById('houseSqft').value=1360;
+    document.getElementById('houseBeds').value=2;
+    document.getElementById('houseBaths').value=1;
+    document.getElementById('houseLot').value=0.60;
+    document.getElementById('houseQuality').value=5;
+  } else if(form==='traffic'){
+    // Dataset row 0: City=Lucknow, Area_Code=47, Population_Density=8238, Vehicles_Per_Hour=1350, Traffic_Signals=9, Weather=Rain, Time_of_Day=Night, Day_Type=Weekday, Road_Type=Street
+    document.getElementById('trafficCity').value='Lucknow';
+    document.getElementById('trafficAreaCode').value=47;
+    document.getElementById('trafficPopDensity').value=8238;
+    document.getElementById('trafficVehicles').value=1350;
+    document.getElementById('trafficSignals').value=9;
+    document.getElementById('trafficWeather').value='Rain';
+    document.getElementById('trafficTime').value='Night';
+    document.getElementById('trafficDayType').value='Weekday';
+    document.getElementById('trafficRoadType').value='Street';
+  } else if(form==='crime'){
+    // Dataset row 1: City=Chennai, Area_Code=46, Population=58002, Unemployment_Rate=17.87, Police_Stations=3, Time=Night(22), Victim_Age=60, Victim_Gender=Male, Weapon_Used=Rod, Past_Crime_Rate=43
+    document.getElementById('crimeCity').value='Chennai';
+    document.getElementById('crimeAreaCode').value=46;
+    document.getElementById('crimePopulation').value=58002;
+    document.getElementById('crimeUnemployment').value=17.87;
+    document.getElementById('crimePoliceStations').value=3;
+    document.getElementById('crimeTime').value=22;
+    document.getElementById('crimeVictimAge').value=60;
+    document.getElementById('crimeVictimGender').value='Male';
+    document.getElementById('crimeWeapon').value='Other';
+    document.getElementById('crimePastRate').value=43;
+  } else if(form==='citizen'){
+    // Dataset row 0: City=Lucknow, Age=64, Monthly_Income=124641, Education=Secondary, Employment=Unemployed, Digital_Usage_Hours=9.1, Household_Size=2, Area_Type=Urban, Govt_Scheme_Usage=1
+    document.getElementById('citizenCity').value='Lucknow';
+    document.getElementById('citizenAge').value=64;
+    document.getElementById('citizenIncome').value=124641;
+    document.getElementById('citizenEdu').value='Secondary';
+    document.getElementById('citizenEmp').value='Unemployed';
+    document.getElementById('citizenDigital').value=9.1;
+    document.getElementById('citizenHousehold').value=2;
+    document.getElementById('citizenArea').value='Urban';
+    document.getElementById('citizenScheme').value=1;
+  }
+}
+
+document.getElementById('houseForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  call('/predict/house_price',{Square_Footage:+document.getElementById('houseSqft').value,Num_Bathrooms:+document.getElementById('houseBaths').value,Num_Bedrooms:+document.getElementById('houseBeds').value,Lot_Size:+document.getElementById('houseLot').value,Neighborhood_Quality:+document.getElementById('houseQuality').value},'houseResult');
+});
+document.getElementById('trafficForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  call('/predict/traffic',{City:document.getElementById('trafficCity').value,Area_Code:+document.getElementById('trafficAreaCode').value,Population_Density:+document.getElementById('trafficPopDensity').value,Vehicles_Per_Hour:+document.getElementById('trafficVehicles').value,Traffic_Signals:+document.getElementById('trafficSignals').value,Weather:document.getElementById('trafficWeather').value,Time_of_Day:document.getElementById('trafficTime').value,Day_Type:document.getElementById('trafficDayType').value,Road_Type:document.getElementById('trafficRoadType').value},'trafficResult');
+});
+document.getElementById('crimeForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  call('/predict/crime',{City:document.getElementById('crimeCity').value,Area_Code:+document.getElementById('crimeAreaCode').value,Population:+document.getElementById('crimePopulation').value,Unemployment_Rate:+document.getElementById('crimeUnemployment').value,Police_Stations:+document.getElementById('crimePoliceStations').value,Time:+document.getElementById('crimeTime').value,Victim_Age:+document.getElementById('crimeVictimAge').value,Victim_Gender:document.getElementById('crimeVictimGender').value,Weapon_Used:document.getElementById('crimeWeapon').value,Past_Crime_Rate:+document.getElementById('crimePastRate').value},'crimeResult');
+});
+document.getElementById('citizenForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  call('/predict/citizen',{City:document.getElementById('citizenCity').value,Age:+document.getElementById('citizenAge').value,Monthly_Income:+document.getElementById('citizenIncome').value,Education_Level:document.getElementById('citizenEdu').value,Employment_Type:document.getElementById('citizenEmp').value,Digital_Usage_Hours:+document.getElementById('citizenDigital').value,Household_Size:+document.getElementById('citizenHousehold').value,Area_Type:document.getElementById('citizenArea').value,Govt_Scheme_Usage:+document.getElementById('citizenScheme').value},'citizenResult');
+});
+
+
+// ===== DATASET SAMPLES =====
+const DS = {
+  house: [{"Square_Footage": "1360", "Num_Bedrooms": "2", "Num_Bathrooms": "1", "Year_Built": "1981", "Lot_Size": "0.5996366396268326", "Garage_Size": "0", "Neighborhood_Quality": "5", "House_Price": "262382.8522740563"}, {"Square_Footage": "4272", "Num_Bedrooms": "3", "Num_Bathrooms": "3", "Year_Built": "2016", "Lot_Size": "4.7530138494020395", "Garage_Size": "1", "Neighborhood_Quality": "6", "House_Price": "985260.854490162"}, {"Square_Footage": "3592", "Num_Bedrooms": "1", "Num_Bathrooms": "2", "Year_Built": "2016", "Lot_Size": "3.634822720478255", "Garage_Size": "0", "Neighborhood_Quality": "9", "House_Price": "777977.3901185812"}, {"Square_Footage": "966", "Num_Bedrooms": "1", "Num_Bathrooms": "2", "Year_Built": "1977", "Lot_Size": "2.73066687604351", "Garage_Size": "1", "Neighborhood_Quality": "8", "House_Price": "229698.9186636115"}, {"Square_Footage": "4926", "Num_Bedrooms": "2", "Num_Bathrooms": "1", "Year_Built": "1993", "Lot_Size": "4.699072554837388", "Garage_Size": "0", "Neighborhood_Quality": "8", "House_Price": "1041740.8589249004"}, {"Square_Footage": "3944", "Num_Bedrooms": "5", "Num_Bathrooms": "3", "Year_Built": "1990", "Lot_Size": "2.475930043628728", "Garage_Size": "2", "Neighborhood_Quality": "8", "House_Price": "879796.9835223783"}, {"Square_Footage": "3671", "Num_Bedrooms": "1", "Num_Bathrooms": "2", "Year_Built": "2012", "Lot_Size": "4.911960066216673", "Garage_Size": "0", "Neighborhood_Quality": "1", "House_Price": "814427.8614089885"}, {"Square_Footage": "3419", "Num_Bedrooms": "1", "Num_Bathrooms": "1", "Year_Built": "1972", "Lot_Size": "2.805281407595683", "Garage_Size": "1", "Neighborhood_Quality": "1", "House_Price": "703413.1109446795"}, {"Square_Footage": "630", "Num_Bedrooms": "3", "Num_Bathrooms": "3", "Year_Built": "1997", "Lot_Size": "1.0142859649909075", "Garage_Size": "1", "Neighborhood_Quality": "8", "House_Price": "173875.03721558454"}, {"Square_Footage": "2185", "Num_Bedrooms": "4", "Num_Bathrooms": "2", "Year_Built": "1981", "Lot_Size": "3.9416043760667474", "Garage_Size": "2", "Neighborhood_Quality": "5", "House_Price": "504176.5060593679"}, {"Square_Footage": "1269", "Num_Bedrooms": "2", "Num_Bathrooms": "2", "Year_Built": "2006", "Lot_Size": "3.5550397628502823", "Garage_Size": "1", "Neighborhood_Quality": "9", "House_Price": "335332.59275293903"}, {"Square_Footage": "2891", "Num_Bedrooms": "2", "Num_Bathrooms": "3", "Year_Built": "1982", "Lot_Size": "3.9784402458751407", "Garage_Size": "0", "Neighborhood_Quality": "2", "House_Price": "635097.3959198"}, {"Square_Footage": "2933", "Num_Bedrooms": "5", "Num_Bathrooms": "3", "Year_Built": "1973", "Lot_Size": "4.781489129265565", "Garage_Size": "2", "Neighborhood_Quality": "9", "House_Price": "701133.8041471172"}, {"Square_Footage": "1684", "Num_Bedrooms": "5", "Num_Bathrooms": "3", "Year_Built": "1988", "Lot_Size": "3.9942018619295814", "Garage_Size": "1", "Neighborhood_Quality": "8", "House_Price": "440726.2848162878"}, {"Square_Footage": "3885", "Num_Bedrooms": "2", "Num_Bathrooms": "3", "Year_Built": "1983", "Lot_Size": "3.251014709974911", "Garage_Size": "1", "Neighborhood_Quality": "9", "House_Price": "838719.430503504"}, {"Square_Footage": "4617", "Num_Bedrooms": "5", "Num_Bathrooms": "1", "Year_Built": "2005", "Lot_Size": "4.3578900606237845", "Garage_Size": "0", "Neighborhood_Quality": "4", "House_Price": "1019192.6613592046"}, {"Square_Footage": "3404", "Num_Bedrooms": "3", "Num_Bathrooms": "3", "Year_Built": "1977", "Lot_Size": "3.529608977095392", "Garage_Size": "0", "Neighborhood_Quality": "1", "House_Price": "735850.8123421574"}, {"Square_Footage": "974", "Num_Bedrooms": "2", "Num_Bathrooms": "2", "Year_Built": "1986", "Lot_Size": "2.336535755716654", "Garage_Size": "2", "Neighborhood_Quality": "1", "House_Price": "234261.64997473895"}, {"Square_Footage": "1582", "Num_Bedrooms": "5", "Num_Bathrooms": "2", "Year_Built": "1956", "Lot_Size": "4.4852889390879795", "Garage_Size": "1", "Neighborhood_Quality": "5", "House_Price": "396246.3588887452"}, {"Square_Footage": "3058", "Num_Bedrooms": "2", "Num_Bathrooms": "1", "Year_Built": "2017", "Lot_Size": "1.498552073529678", "Garage_Size": "0", "Neighborhood_Quality": "2", "House_Price": "672852.0519810001"}, {"Square_Footage": "2547", "Num_Bedrooms": "4", "Num_Bathrooms": "2", "Year_Built": "1986", "Lot_Size": "3.715885737089259", "Garage_Size": "2", "Neighborhood_Quality": "8", "House_Price": "586086.5685389101"}, {"Square_Footage": "3247", "Num_Bedrooms": "1", "Num_Bathrooms": "2", "Year_Built": "2005", "Lot_Size": "4.467035547233406", "Garage_Size": "1", "Neighborhood_Quality": "10", "House_Price": "740174.0146550778"}, {"Square_Footage": "1475", "Num_Bedrooms": "2", "Num_Bathrooms": "3", "Year_Built": "2014", "Lot_Size": "3.790924338664833", "Garage_Size": "1", "Neighborhood_Quality": "5", "House_Price": "370167.09090271546"}, {"Square_Footage": "2306", "Num_Bedrooms": "1", "Num_Bathrooms": "2", "Year_Built": "2014", "Lot_Size": "3.637739385742356", "Garage_Size": "2", "Neighborhood_Quality": "5", "House_Price": "530824.1967752124"}, {"Square_Footage": "689", "Num_Bedrooms": "5", "Num_Bathrooms": "1", "Year_Built": "1996", "Lot_Size": "3.8868723233232623", "Garage_Size": "2", "Neighborhood_Quality": "2", "House_Price": "227515.3002879812"}, {"Square_Footage": "3234", "Num_Bedrooms": "1", "Num_Bathrooms": "3", "Year_Built": "1969", "Lot_Size": "2.5927486173528997", "Garage_Size": "0", "Neighborhood_Quality": "7", "House_Price": "652166.1423658864"}, {"Square_Footage": "3505", "Num_Bedrooms": "2", "Num_Bathrooms": "3", "Year_Built": "1968", "Lot_Size": "4.433768069706617", "Garage_Size": "1", "Neighborhood_Quality": "8", "House_Price": "745670.6371477235"}, {"Square_Footage": "2399", "Num_Bedrooms": "4", "Num_Bathrooms": "1", "Year_Built": "1978", "Lot_Size": "1.4154641381124105", "Garage_Size": "1", "Neighborhood_Quality": "10", "House_Price": "513161.95119306416"}, {"Square_Footage": "1767", "Num_Bedrooms": "5", "Num_Bathrooms": "3", "Year_Built": "2009", "Lot_Size": "1.073238872001527", "Garage_Size": "1", "Neighborhood_Quality": "1", "House_Price": "432357.9061027443"}, {"Square_Footage": "2028", "Num_Bedrooms": "2", "Num_Bathrooms": "3", "Year_Built": "1967", "Lot_Size": "1.784789510533302", "Garage_Size": "2", "Neighborhood_Quality": "2", "House_Price": "434165.89663405064"}, {"Square_Footage": "3702", "Num_Bedrooms": "5", "Num_Bathrooms": "1", "Year_Built": "1984", "Lot_Size": "2.892098285487469", "Garage_Size": "0", "Neighborhood_Quality": "10", "House_Price": "809686.201143527"}, {"Square_Footage": "4056", "Num_Bedrooms": "3", "Num_Bathrooms": "3", "Year_Built": "1992", "Lot_Size": "2.7975280793420216", "Garage_Size": "1", "Neighborhood_Quality": "4", "House_Price": "883819.0911218557"}, {"Square_Footage": "4390", "Num_Bedrooms": "1", "Num_Bathrooms": "1", "Year_Built": "1960", "Lot_Size": "4.1926944095446395", "Garage_Size": "2", "Neighborhood_Quality": "5", "House_Price": "912468.0479046734"}, {"Square_Footage": "1146", "Num_Bedrooms": "3", "Num_Bathrooms": "1", "Year_Built": "1998", "Lot_Size": "2.3205589538180784", "Garage_Size": "1", "Neighborhood_Quality": "2", "House_Price": "281313.0614448485"}, {"Square_Footage": "3388", "Num_Bedrooms": "2", "Num_Bathrooms": "2", "Year_Built": "1987", "Lot_Size": "2.679549918311789", "Garage_Size": "0", "Neighborhood_Quality": "1", "House_Price": "705923.3148916194"}, {"Square_Footage": "2935", "Num_Bedrooms": "4", "Num_Bathrooms": "2", "Year_Built": "2013", "Lot_Size": "0.5601545746672804", "Garage_Size": "1", "Neighborhood_Quality": "9", "House_Price": "656980.4604282172"}, {"Square_Footage": "1100", "Num_Bedrooms": "5", "Num_Bathrooms": "3", "Year_Built": "2018", "Lot_Size": "2.343826563993226", "Garage_Size": "0", "Neighborhood_Quality": "1", "House_Price": "318266.2771320871"}, {"Square_Footage": "2863", "Num_Bedrooms": "1", "Num_Bathrooms": "3", "Year_Built": "1957", "Lot_Size": "3.4149840482765392", "Garage_Size": "0", "Neighborhood_Quality": "4", "House_Price": "582468.7977365239"}, {"Square_Footage": "2561", "Num_Bedrooms": "5", "Num_Bathrooms": "1", "Year_Built": "1983", "Lot_Size": "0.5697874878196648", "Garage_Size": "1", "Neighborhood_Quality": "2", "House_Price": "541967.633559251"}, {"Square_Footage": "741", "Num_Bedrooms": "2", "Num_Bathrooms": "3", "Year_Built": "1997", "Lot_Size": "1.763968843338097", "Garage_Size": "1", "Neighborhood_Quality": "4", "House_Price": "188531.42345710634"}, {"Square_Footage": "2541", "Num_Bedrooms": "5", "Num_Bathrooms": "1", "Year_Built": "2005", "Lot_Size": "1.4358036168022548", "Garage_Size": "0", "Neighborhood_Quality": "8", "House_Price": "565562.7504321395"}, {"Square_Footage": "3324", "Num_Bedrooms": "1", "Num_Bathrooms": "1", "Year_Built": "2014", "Lot_Size": "0.688934430093147", "Garage_Size": "2", "Neighborhood_Quality": "8", "House_Price": "697574.5556670319"}, {"Square_Footage": "3112", "Num_Bedrooms": "2", "Num_Bathrooms": "3", "Year_Built": "1980", "Lot_Size": "2.6566704046154186", "Garage_Size": "0", "Neighborhood_Quality": "9", "House_Price": "666733.4734616925"}, {"Square_Footage": "1863", "Num_Bedrooms": "5", "Num_Bathrooms": "1", "Year_Built": "1953", "Lot_Size": "1.3177548195267041", "Garage_Size": "1", "Neighborhood_Quality": "5", "House_Price": "376388.0216286443"}, {"Square_Footage": "1978", "Num_Bedrooms": "4", "Num_Bathrooms": "2", "Year_Built": "1999", "Lot_Size": "3.8438669283412104", "Garage_Size": "1", "Neighborhood_Quality": "7", "House_Price": "485380.95019563066"}, {"Square_Footage": "3056", "Num_Bedrooms": "2", "Num_Bathrooms": "3", "Year_Built": "2018", "Lot_Size": "4.315675476935068", "Garage_Size": "2", "Neighborhood_Quality": "3", "House_Price": "735678.4622017285"}, {"Square_Footage": "1275", "Num_Bedrooms": "2", "Num_Bathrooms": "2", "Year_Built": "1979", "Lot_Size": "2.9551333220111653", "Garage_Size": "0", "Neighborhood_Quality": "10", "House_Price": "296291.0010075069"}, {"Square_Footage": "4514", "Num_Bedrooms": "4", "Num_Bathrooms": "3", "Year_Built": "2008", "Lot_Size": "4.917683041345137", "Garage_Size": "0", "Neighborhood_Quality": "4", "House_Price": "1046315.8960136625"}, {"Square_Footage": "534", "Num_Bedrooms": "3", "Num_Bathrooms": "1", "Year_Built": "2016", "Lot_Size": "2.527153571617679", "Garage_Size": "0", "Neighborhood_Quality": "10", "House_Price": "187508.58531168045"}, {"Square_Footage": "3652", "Num_Bedrooms": "1", "Num_Bathrooms": "3", "Year_Built": "1994", "Lot_Size": "2.81015694601212", "Garage_Size": "1", "Neighborhood_Quality": "9", "House_Price": "793995.2848757812"}, {"Square_Footage": "2455", "Num_Bedrooms": "3", "Num_Bathrooms": "2", "Year_Built": "1953", "Lot_Size": "4.951479892809876", "Garage_Size": "0", "Neighborhood_Quality": "10", "House_Price": "527393.5128875901"}, {"Square_Footage": "2085", "Num_Bedrooms": "5", "Num_Bathrooms": "1", "Year_Built": "1975", "Lot_Size": "1.5419679618427198", "Garage_Size": "2", "Neighborhood_Quality": "10", "House_Price": "467768.122943975"}, {"Square_Footage": "4443", "Num_Bedrooms": "4", "Num_Bathrooms": "3", "Year_Built": "1976", "Lot_Size": "4.741456728546074", "Garage_Size": "1", "Neighborhood_Quality": "1", "House_Price": "981190.782911222"}, {"Square_Footage": "3573", "Num_Bedrooms": "3", "Num_Bathrooms": "3", "Year_Built": "1995", "Lot_Size": "0.6927689980360097", "Garage_Size": "1", "Neighborhood_Quality": "2", "House_Price": "750481.7169351575"}, {"Square_Footage": "1521", "Num_Bedrooms": "2", "Num_Bathrooms": "3", "Year_Built": "2013", "Lot_Size": "2.5087410061843767", "Garage_Size": "0", "Neighborhood_Quality": "5", "House_Price": "377511.26849809097"}, {"Square_Footage": "3961", "Num_Bedrooms": "5", "Num_Bathrooms": "2", "Year_Built": "2000", "Lot_Size": "0.815015804598796", "Garage_Size": "2", "Neighborhood_Quality": "3", "House_Price": "866877.3524150968"}, {"Square_Footage": "3113", "Num_Bedrooms": "5", "Num_Bathrooms": "2", "Year_Built": "1999", "Lot_Size": "3.7815563431113937", "Garage_Size": "1", "Neighborhood_Quality": "2", "House_Price": "731331.6610567131"}, {"Square_Footage": "4343", "Num_Bedrooms": "3", "Num_Bathrooms": "3", "Year_Built": "1955", "Lot_Size": "3.23784021146008", "Garage_Size": "1", "Neighborhood_Quality": "1", "House_Price": "899382.8651584806"}, {"Square_Footage": "2000", "Num_Bedrooms": "3", "Num_Bathrooms": "1", "Year_Built": "2008", "Lot_Size": "3.6798541856041838", "Garage_Size": "0", "Neighborhood_Quality": "10", "House_Price": "485622.401919989"}, {"Square_Footage": "661", "Num_Bedrooms": "4", "Num_Bathrooms": "1", "Year_Built": "1964", "Lot_Size": "2.1851617998560764", "Garage_Size": "0", "Neighborhood_Quality": "3", "House_Price": "147601.55157708153"}, {"Square_Footage": "4797", "Num_Bedrooms": "1", "Num_Bathrooms": "2", "Year_Built": "1979", "Lot_Size": "2.162668703141211", "Garage_Size": "2", "Neighborhood_Quality": "1", "House_Price": "986006.861736761"}, {"Square_Footage": "2481", "Num_Bedrooms": "3", "Num_Bathrooms": "1", "Year_Built": "1991", "Lot_Size": "0.7039367553240257", "Garage_Size": "0", "Neighborhood_Quality": "1", "House_Price": "509725.550655089"}, {"Square_Footage": "1495", "Num_Bedrooms": "3", "Num_Bathrooms": "2", "Year_Built": "1986", "Lot_Size": "2.074752227883379", "Garage_Size": "2", "Neighborhood_Quality": "1", "House_Price": "346932.6209008944"}, {"Square_Footage": "3842", "Num_Bedrooms": "2", "Num_Bathrooms": "3", "Year_Built": "1991", "Lot_Size": "4.681797810179267", "Garage_Size": "1", "Neighborhood_Quality": "8", "House_Price": "863289.3969030941"}, {"Square_Footage": "4298", "Num_Bedrooms": "5", "Num_Bathrooms": "2", "Year_Built": "1984", "Lot_Size": "2.2065194173120206", "Garage_Size": "2", "Neighborhood_Quality": "3", "House_Price": "919295.8540615214"}, {"Square_Footage": "1775", "Num_Bedrooms": "1", "Num_Bathrooms": "2", "Year_Built": "1955", "Lot_Size": "4.241154677998865", "Garage_Size": "2", "Neighborhood_Quality": "1", "House_Price": "406069.2709127523"}, {"Square_Footage": "1516", "Num_Bedrooms": "2", "Num_Bathrooms": "3", "Year_Built": "2017", "Lot_Size": "4.290464771374703", "Garage_Size": "2", "Neighborhood_Quality": "7", "House_Price": "397346.1108776756"}, {"Square_Footage": "837", "Num_Bedrooms": "4", "Num_Bathrooms": "1", "Year_Built": "1967", "Lot_Size": "2.1795852037065524", "Garage_Size": "1", "Neighborhood_Quality": "10", "House_Price": "191117.1012230497"}, {"Square_Footage": "1378", "Num_Bedrooms": "4", "Num_Bathrooms": "2", "Year_Built": "2022", "Lot_Size": "3.3439490617828507", "Garage_Size": "0", "Neighborhood_Quality": "3", "House_Price": "384461.3548261602"}, {"Square_Footage": "1576", "Num_Bedrooms": "3", "Num_Bathrooms": "2", "Year_Built": "1978", "Lot_Size": "0.9291722102287638", "Garage_Size": "1", "Neighborhood_Quality": "8", "House_Price": "340980.72481778456"}, {"Square_Footage": "4493", "Num_Bedrooms": "3", "Num_Bathrooms": "3", "Year_Built": "2008", "Lot_Size": "0.9665536133042443", "Garage_Size": "0", "Neighborhood_Quality": "4", "House_Price": "951093.5469938467"}, {"Square_Footage": "879", "Num_Bedrooms": "4", "Num_Bathrooms": "1", "Year_Built": "1996", "Lot_Size": "0.7189594864777099", "Garage_Size": "2", "Neighborhood_Quality": "4", "House_Price": "217010.48526715022"}, {"Square_Footage": "992", "Num_Bedrooms": "3", "Num_Bathrooms": "2", "Year_Built": "1966", "Lot_Size": "3.1145679201879926", "Garage_Size": "2", "Neighborhood_Quality": "5", "House_Price": "248224.01965609606"}, {"Square_Footage": "2562", "Num_Bedrooms": "1", "Num_Bathrooms": "3", "Year_Built": "1971", "Lot_Size": "2.417319399317437", "Garage_Size": "2", "Neighborhood_Quality": "6", "House_Price": "538349.0962151848"}, {"Square_Footage": "4384", "Num_Bedrooms": "3", "Num_Bathrooms": "2", "Year_Built": "2017", "Lot_Size": "2.9661456049890806", "Garage_Size": "2", "Neighborhood_Quality": "7", "House_Price": "985223.9966541852"}, {"Square_Footage": "564", "Num_Bedrooms": "5", "Num_Bathrooms": "3", "Year_Built": "2018", "Lot_Size": "2.8448293572877454", "Garage_Size": "2", "Neighborhood_Quality": "4", "House_Price": "242865.9315016322"}, {"Square_Footage": "3068", "Num_Bedrooms": "3", "Num_Bathrooms": "1", "Year_Built": "1986", "Lot_Size": "2.0759134599082865", "Garage_Size": "0", "Neighborhood_Quality": "8", "House_Price": "654466.9454086807"}, {"Square_Footage": "2527", "Num_Bedrooms": "2", "Num_Bathrooms": "1", "Year_Built": "1998", "Lot_Size": "3.548630366705628", "Garage_Size": "0", "Neighborhood_Quality": "6", "House_Price": "551967.8882668803"}, {"Square_Footage": "3195", "Num_Bedrooms": "1", "Num_Bathrooms": "1", "Year_Built": "1962", "Lot_Size": "3.913258464123758", "Garage_Size": "2", "Neighborhood_Quality": "1", "House_Price": "663904.9927177994"}, {"Square_Footage": "1995", "Num_Bedrooms": "2", "Num_Bathrooms": "1", "Year_Built": "1983", "Lot_Size": "0.5658271649495408", "Garage_Size": "1", "Neighborhood_Quality": "1", "House_Price": "397482.74798703607"}, {"Square_Footage": "891", "Num_Bedrooms": "2", "Num_Bathrooms": "2", "Year_Built": "2002", "Lot_Size": "1.4325903489599523", "Garage_Size": "1", "Neighborhood_Quality": "9", "House_Price": "209632.84147750464"}, {"Square_Footage": "4974", "Num_Bedrooms": "5", "Num_Bathrooms": "2", "Year_Built": "2000", "Lot_Size": "3.7095614063750157", "Garage_Size": "2", "Neighborhood_Quality": "10", "House_Price": "1107045.062935083"}, {"Square_Footage": "4061", "Num_Bedrooms": "1", "Num_Bathrooms": "1", "Year_Built": "1952", "Lot_Size": "2.239790776852254", "Garage_Size": "0", "Neighborhood_Quality": "6", "House_Price": "787420.4040749857"}, {"Square_Footage": "2778", "Num_Bedrooms": "1", "Num_Bathrooms": "1", "Year_Built": "1991", "Lot_Size": "3.4811777612372365", "Garage_Size": "1", "Neighborhood_Quality": "10", "House_Price": "605371.7047170609"}, {"Square_Footage": "3599", "Num_Bedrooms": "1", "Num_Bathrooms": "1", "Year_Built": "1981", "Lot_Size": "2.061331968805513", "Garage_Size": "1", "Neighborhood_Quality": "8", "House_Price": "721018.0639031393"}, {"Square_Footage": "700", "Num_Bedrooms": "1", "Num_Bathrooms": "2", "Year_Built": "2000", "Lot_Size": "2.258398185483367", "Garage_Size": "1", "Neighborhood_Quality": "7", "House_Price": "199066.37891066872"}, {"Square_Footage": "3604", "Num_Bedrooms": "1", "Num_Bathrooms": "1", "Year_Built": "1995", "Lot_Size": "1.2140549316035822", "Garage_Size": "2", "Neighborhood_Quality": "6", "House_Price": "730047.4973881331"}, {"Square_Footage": "2954", "Num_Bedrooms": "5", "Num_Bathrooms": "1", "Year_Built": "1970", "Lot_Size": "1.6620395884977202", "Garage_Size": "1", "Neighborhood_Quality": "4", "House_Price": "627923.6171994702"}, {"Square_Footage": "4145", "Num_Bedrooms": "3", "Num_Bathrooms": "1", "Year_Built": "1993", "Lot_Size": "3.2243529087841427", "Garage_Size": "1", "Neighborhood_Quality": "7", "House_Price": "898283.8867356428"}, {"Square_Footage": "1304", "Num_Bedrooms": "2", "Num_Bathrooms": "3", "Year_Built": "1960", "Lot_Size": "2.4492340009182487", "Garage_Size": "1", "Neighborhood_Quality": "9", "House_Price": "277832.10571177263"}, {"Square_Footage": "3231", "Num_Bedrooms": "1", "Num_Bathrooms": "1", "Year_Built": "2017", "Lot_Size": "3.9843620732506784", "Garage_Size": "1", "Neighborhood_Quality": "10", "House_Price": "731490.1175330897"}, {"Square_Footage": "3273", "Num_Bedrooms": "3", "Num_Bathrooms": "3", "Year_Built": "1950", "Lot_Size": "4.336632297222542", "Garage_Size": "0", "Neighborhood_Quality": "10", "House_Price": "688357.648480334"}, {"Square_Footage": "2070", "Num_Bedrooms": "3", "Num_Bathrooms": "3", "Year_Built": "2012", "Lot_Size": "2.9374088819754194", "Garage_Size": "2", "Neighborhood_Quality": "7", "House_Price": "525582.3102214569"}, {"Square_Footage": "3190", "Num_Bedrooms": "2", "Num_Bathrooms": "1", "Year_Built": "1973", "Lot_Size": "3.9122028142522662", "Garage_Size": "2", "Neighborhood_Quality": "1", "House_Price": "684824.5348634415"}, {"Square_Footage": "4340", "Num_Bedrooms": "5", "Num_Bathrooms": "3", "Year_Built": "1962", "Lot_Size": "1.881070309375565", "Garage_Size": "0", "Neighborhood_Quality": "10", "House_Price": "903251.9405609447"}, {"Square_Footage": "1528", "Num_Bedrooms": "4", "Num_Bathrooms": "1", "Year_Built": "1960", "Lot_Size": "2.3673704693003517", "Garage_Size": "0", "Neighborhood_Quality": "9", "House_Price": "323118.7393152309"}, {"Square_Footage": "1002", "Num_Bedrooms": "4", "Num_Bathrooms": "2", "Year_Built": "2000", "Lot_Size": "3.7074995429757394", "Garage_Size": "2", "Neighborhood_Quality": "4", "House_Price": "307101.6858385633"}, {"Square_Footage": "4993", "Num_Bedrooms": "3", "Num_Bathrooms": "2", "Year_Built": "1966", "Lot_Size": "2.237953967676638", "Garage_Size": "1", "Neighborhood_Quality": "3", "House_Price": "1020324.7565966452"}, {"Square_Footage": "1370", "Num_Bedrooms": "2", "Num_Bathrooms": "2", "Year_Built": "1973", "Lot_Size": "3.1482722082154497", "Garage_Size": "1", "Neighborhood_Quality": "4", "House_Price": "304730.506229004"}, {"Square_Footage": "4988", "Num_Bedrooms": "4", "Num_Bathrooms": "2", "Year_Built": "1968", "Lot_Size": "1.3341775058713017", "Garage_Size": "2", "Neighborhood_Quality": "4", "House_Price": "1026397.2966122321"}],
+  traffic: [{"City": "Lucknow", "Area_Code": "47", "Population_Density": "8238", "Vehicles_Per_Hour": "1350", "Traffic_Signals": "9", "Weather": "Rain", "Time_of_Day": "Night", "Day_Type": "Weekday", "Road_Type": "Street", "Traffic_High": "0"}, {"City": "Hyderabad", "Area_Code": "46", "Population_Density": "7026", "Vehicles_Per_Hour": "822", "Traffic_Signals": "11", "Weather": "Clear", "Time_of_Day": "Evening", "Day_Type": "Weekend", "Road_Type": "Street", "Traffic_High": "1"}, {"City": "Jaipur", "Area_Code": "52", "Population_Density": "11482", "Vehicles_Per_Hour": "1966", "Traffic_Signals": "9", "Weather": "Fog", "Time_of_Day": "Afternoon", "Day_Type": "Weekday", "Road_Type": "Highway", "Traffic_High": "1"}, {"City": "Chennai", "Area_Code": "19", "Population_Density": "14801", "Vehicles_Per_Hour": "1414", "Traffic_Signals": "5", "Weather": "Clear", "Time_of_Day": "Night", "Day_Type": "Weekday", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Lucknow", "Area_Code": "77", "Population_Density": "17120", "Vehicles_Per_Hour": "501", "Traffic_Signals": "1", "Weather": "Rain", "Time_of_Day": "Morning", "Day_Type": "Weekday", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Ahmedabad", "Area_Code": "21", "Population_Density": "16580", "Vehicles_Per_Hour": "1442", "Traffic_Signals": "7", "Weather": "Rain", "Time_of_Day": "Morning", "Day_Type": "Weekend", "Road_Type": "Street", "Traffic_High": "1"}, {"City": "Bangalore", "Area_Code": "64", "Population_Density": "9664", "Vehicles_Per_Hour": "993", "Traffic_Signals": "11", "Weather": "Rain", "Time_of_Day": "Afternoon", "Day_Type": "Weekday", "Road_Type": "Street", "Traffic_High": "1"}, {"City": "Lucknow", "Area_Code": "37", "Population_Density": "18342", "Vehicles_Per_Hour": "897", "Traffic_Signals": "5", "Weather": "Rain", "Time_of_Day": "Evening", "Day_Type": "Weekday", "Road_Type": "Main Road", "Traffic_High": "1"}, {"City": "Jaipur", "Area_Code": "27", "Population_Density": "1493", "Vehicles_Per_Hour": "1066", "Traffic_Signals": "3", "Weather": "Clear", "Time_of_Day": "Afternoon", "Day_Type": "Weekday", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Chennai", "Area_Code": "55", "Population_Density": "17465", "Vehicles_Per_Hour": "1547", "Traffic_Signals": "3", "Weather": "Rain", "Time_of_Day": "Afternoon", "Day_Type": "Weekday", "Road_Type": "Highway", "Traffic_High": "1"}, {"City": "Hyderabad", "Area_Code": "29", "Population_Density": "7999", "Vehicles_Per_Hour": "1263", "Traffic_Signals": "10", "Weather": "Fog", "Time_of_Day": "Morning", "Day_Type": "Weekend", "Road_Type": "Main Road", "Traffic_High": "1"}, {"City": "Jaipur", "Area_Code": "20", "Population_Density": "14833", "Vehicles_Per_Hour": "933", "Traffic_Signals": "6", "Weather": "Rain", "Time_of_Day": "Morning", "Day_Type": "Weekend", "Road_Type": "Highway", "Traffic_High": "1"}, {"City": "Jaipur", "Area_Code": "25", "Population_Density": "3970", "Vehicles_Per_Hour": "468", "Traffic_Signals": "2", "Weather": "Fog", "Time_of_Day": "Night", "Day_Type": "Weekday", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Bangalore", "Area_Code": "70", "Population_Density": "1011", "Vehicles_Per_Hour": "1783", "Traffic_Signals": "10", "Weather": "Rain", "Time_of_Day": "Night", "Day_Type": "Weekday", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Kolkata", "Area_Code": "63", "Population_Density": "16551", "Vehicles_Per_Hour": "914", "Traffic_Signals": "2", "Weather": "Clear", "Time_of_Day": "Night", "Day_Type": "Weekday", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Chennai", "Area_Code": "36", "Population_Density": "18145", "Vehicles_Per_Hour": "838", "Traffic_Signals": "5", "Weather": "Fog", "Time_of_Day": "Afternoon", "Day_Type": "Weekend", "Road_Type": "Main Road", "Traffic_High": "1"}, {"City": "Mumbai", "Area_Code": "2", "Population_Density": "4185", "Vehicles_Per_Hour": "1921", "Traffic_Signals": "8", "Weather": "Clear", "Time_of_Day": "Afternoon", "Day_Type": "Weekend", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Jaipur", "Area_Code": "22", "Population_Density": "17409", "Vehicles_Per_Hour": "544", "Traffic_Signals": "0", "Weather": "Rain", "Time_of_Day": "Night", "Day_Type": "Weekday", "Road_Type": "Street", "Traffic_High": "0"}, {"City": "Kolkata", "Area_Code": "16", "Population_Density": "2806", "Vehicles_Per_Hour": "1112", "Traffic_Signals": "4", "Weather": "Clear", "Time_of_Day": "Morning", "Day_Type": "Weekday", "Road_Type": "Street", "Traffic_High": "0"}, {"City": "Mumbai", "Area_Code": "18", "Population_Density": "6664", "Vehicles_Per_Hour": "211", "Traffic_Signals": "0", "Weather": "Rain", "Time_of_Day": "Morning", "Day_Type": "Weekend", "Road_Type": "Street", "Traffic_High": "0"}, {"City": "Chennai", "Area_Code": "69", "Population_Density": "15126", "Vehicles_Per_Hour": "170", "Traffic_Signals": "0", "Weather": "Clear", "Time_of_Day": "Evening", "Day_Type": "Weekday", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Delhi", "Area_Code": "54", "Population_Density": "13894", "Vehicles_Per_Hour": "1965", "Traffic_Signals": "2", "Weather": "Clear", "Time_of_Day": "Night", "Day_Type": "Weekend", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Ahmedabad", "Area_Code": "30", "Population_Density": "6154", "Vehicles_Per_Hour": "448", "Traffic_Signals": "2", "Weather": "Fog", "Time_of_Day": "Afternoon", "Day_Type": "Weekday", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Kolkata", "Area_Code": "45", "Population_Density": "14767", "Vehicles_Per_Hour": "1335", "Traffic_Signals": "3", "Weather": "Rain", "Time_of_Day": "Evening", "Day_Type": "Weekday", "Road_Type": "Highway", "Traffic_High": "1"}, {"City": "Pune", "Area_Code": "19", "Population_Density": "16226", "Vehicles_Per_Hour": "777", "Traffic_Signals": "2", "Weather": "Clear", "Time_of_Day": "Evening", "Day_Type": "Weekday", "Road_Type": "Main Road", "Traffic_High": "1"}, {"City": "Delhi", "Area_Code": "34", "Population_Density": "2525", "Vehicles_Per_Hour": "1897", "Traffic_Signals": "5", "Weather": "Rain", "Time_of_Day": "Evening", "Day_Type": "Weekday", "Road_Type": "Street", "Traffic_High": "1"}, {"City": "Ahmedabad", "Area_Code": "13", "Population_Density": "1760", "Vehicles_Per_Hour": "610", "Traffic_Signals": "11", "Weather": "Fog", "Time_of_Day": "Night", "Day_Type": "Weekend", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Bangalore", "Area_Code": "43", "Population_Density": "17978", "Vehicles_Per_Hour": "653", "Traffic_Signals": "3", "Weather": "Clear", "Time_of_Day": "Night", "Day_Type": "Weekend", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Lucknow", "Area_Code": "62", "Population_Density": "14880", "Vehicles_Per_Hour": "1202", "Traffic_Signals": "7", "Weather": "Rain", "Time_of_Day": "Night", "Day_Type": "Weekend", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Hyderabad", "Area_Code": "22", "Population_Density": "2055", "Vehicles_Per_Hour": "1906", "Traffic_Signals": "0", "Weather": "Clear", "Time_of_Day": "Morning", "Day_Type": "Weekday", "Road_Type": "Street", "Traffic_High": "0"}, {"City": "Pune", "Area_Code": "52", "Population_Density": "11046", "Vehicles_Per_Hour": "589", "Traffic_Signals": "7", "Weather": "Clear", "Time_of_Day": "Evening", "Day_Type": "Weekday", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Bangalore", "Area_Code": "52", "Population_Density": "4083", "Vehicles_Per_Hour": "405", "Traffic_Signals": "10", "Weather": "Clear", "Time_of_Day": "Morning", "Day_Type": "Weekend", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Chennai", "Area_Code": "36", "Population_Density": "16678", "Vehicles_Per_Hour": "709", "Traffic_Signals": "0", "Weather": "Clear", "Time_of_Day": "Night", "Day_Type": "Weekend", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Bangalore", "Area_Code": "73", "Population_Density": "13108", "Vehicles_Per_Hour": "481", "Traffic_Signals": "10", "Weather": "Fog", "Time_of_Day": "Morning", "Day_Type": "Weekday", "Road_Type": "Main Road", "Traffic_High": "1"}, {"City": "Lucknow", "Area_Code": "19", "Population_Density": "10650", "Vehicles_Per_Hour": "1913", "Traffic_Signals": "0", "Weather": "Fog", "Time_of_Day": "Morning", "Day_Type": "Weekend", "Road_Type": "Street", "Traffic_High": "1"}, {"City": "Chennai", "Area_Code": "38", "Population_Density": "6957", "Vehicles_Per_Hour": "1138", "Traffic_Signals": "6", "Weather": "Rain", "Time_of_Day": "Afternoon", "Day_Type": "Weekday", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Pune", "Area_Code": "70", "Population_Density": "6255", "Vehicles_Per_Hour": "1291", "Traffic_Signals": "0", "Weather": "Rain", "Time_of_Day": "Night", "Day_Type": "Weekend", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Lucknow", "Area_Code": "79", "Population_Density": "10411", "Vehicles_Per_Hour": "612", "Traffic_Signals": "8", "Weather": "Clear", "Time_of_Day": "Evening", "Day_Type": "Weekday", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Mumbai", "Area_Code": "57", "Population_Density": "17344", "Vehicles_Per_Hour": "1500", "Traffic_Signals": "7", "Weather": "Clear", "Time_of_Day": "Night", "Day_Type": "Weekday", "Road_Type": "Main Road", "Traffic_High": "1"}, {"City": "Hyderabad", "Area_Code": "20", "Population_Density": "10691", "Vehicles_Per_Hour": "866", "Traffic_Signals": "0", "Weather": "Clear", "Time_of_Day": "Morning", "Day_Type": "Weekend", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Pune", "Area_Code": "9", "Population_Density": "19214", "Vehicles_Per_Hour": "1994", "Traffic_Signals": "1", "Weather": "Fog", "Time_of_Day": "Night", "Day_Type": "Weekend", "Road_Type": "Street", "Traffic_High": "1"}, {"City": "Mumbai", "Area_Code": "32", "Population_Density": "4395", "Vehicles_Per_Hour": "1147", "Traffic_Signals": "1", "Weather": "Clear", "Time_of_Day": "Night", "Day_Type": "Weekday", "Road_Type": "Street", "Traffic_High": "0"}, {"City": "Ahmedabad", "Area_Code": "4", "Population_Density": "2203", "Vehicles_Per_Hour": "1533", "Traffic_Signals": "1", "Weather": "Rain", "Time_of_Day": "Afternoon", "Day_Type": "Weekday", "Road_Type": "Street", "Traffic_High": "0"}, {"City": "Pune", "Area_Code": "50", "Population_Density": "4044", "Vehicles_Per_Hour": "1498", "Traffic_Signals": "5", "Weather": "Clear", "Time_of_Day": "Afternoon", "Day_Type": "Weekend", "Road_Type": "Street", "Traffic_High": "0"}, {"City": "Ahmedabad", "Area_Code": "5", "Population_Density": "8272", "Vehicles_Per_Hour": "760", "Traffic_Signals": "3", "Weather": "Fog", "Time_of_Day": "Night", "Day_Type": "Weekday", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Chennai", "Area_Code": "20", "Population_Density": "4514", "Vehicles_Per_Hour": "1265", "Traffic_Signals": "7", "Weather": "Clear", "Time_of_Day": "Afternoon", "Day_Type": "Weekend", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Mumbai", "Area_Code": "75", "Population_Density": "10990", "Vehicles_Per_Hour": "1262", "Traffic_Signals": "0", "Weather": "Fog", "Time_of_Day": "Morning", "Day_Type": "Weekday", "Road_Type": "Main Road", "Traffic_High": "1"}, {"City": "Hyderabad", "Area_Code": "37", "Population_Density": "7192", "Vehicles_Per_Hour": "61", "Traffic_Signals": "9", "Weather": "Fog", "Time_of_Day": "Morning", "Day_Type": "Weekend", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Lucknow", "Area_Code": "22", "Population_Density": "11767", "Vehicles_Per_Hour": "288", "Traffic_Signals": "3", "Weather": "Fog", "Time_of_Day": "Morning", "Day_Type": "Weekday", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Jaipur", "Area_Code": "58", "Population_Density": "17528", "Vehicles_Per_Hour": "1945", "Traffic_Signals": "9", "Weather": "Fog", "Time_of_Day": "Afternoon", "Day_Type": "Weekday", "Road_Type": "Highway", "Traffic_High": "1"}, {"City": "Bangalore", "Area_Code": "68", "Population_Density": "8507", "Vehicles_Per_Hour": "1666", "Traffic_Signals": "10", "Weather": "Rain", "Time_of_Day": "Night", "Day_Type": "Weekday", "Road_Type": "Main Road", "Traffic_High": "1"}, {"City": "Delhi", "Area_Code": "44", "Population_Density": "5857", "Vehicles_Per_Hour": "502", "Traffic_Signals": "4", "Weather": "Fog", "Time_of_Day": "Morning", "Day_Type": "Weekday", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Hyderabad", "Area_Code": "34", "Population_Density": "13118", "Vehicles_Per_Hour": "432", "Traffic_Signals": "8", "Weather": "Rain", "Time_of_Day": "Evening", "Day_Type": "Weekday", "Road_Type": "Street", "Traffic_High": "1"}, {"City": "Mumbai", "Area_Code": "77", "Population_Density": "18761", "Vehicles_Per_Hour": "831", "Traffic_Signals": "4", "Weather": "Rain", "Time_of_Day": "Morning", "Day_Type": "Weekday", "Road_Type": "Main Road", "Traffic_High": "1"}, {"City": "Jaipur", "Area_Code": "42", "Population_Density": "4146", "Vehicles_Per_Hour": "1875", "Traffic_Signals": "10", "Weather": "Clear", "Time_of_Day": "Night", "Day_Type": "Weekday", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Hyderabad", "Area_Code": "9", "Population_Density": "18177", "Vehicles_Per_Hour": "97", "Traffic_Signals": "2", "Weather": "Clear", "Time_of_Day": "Morning", "Day_Type": "Weekend", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Mumbai", "Area_Code": "7", "Population_Density": "6756", "Vehicles_Per_Hour": "366", "Traffic_Signals": "10", "Weather": "Fog", "Time_of_Day": "Evening", "Day_Type": "Weekend", "Road_Type": "Main Road", "Traffic_High": "1"}, {"City": "Kolkata", "Area_Code": "68", "Population_Density": "5414", "Vehicles_Per_Hour": "258", "Traffic_Signals": "3", "Weather": "Clear", "Time_of_Day": "Morning", "Day_Type": "Weekday", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Kolkata", "Area_Code": "19", "Population_Density": "18494", "Vehicles_Per_Hour": "1620", "Traffic_Signals": "9", "Weather": "Fog", "Time_of_Day": "Morning", "Day_Type": "Weekend", "Road_Type": "Street", "Traffic_High": "1"}, {"City": "Ahmedabad", "Area_Code": "31", "Population_Density": "4937", "Vehicles_Per_Hour": "1192", "Traffic_Signals": "6", "Weather": "Clear", "Time_of_Day": "Night", "Day_Type": "Weekend", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Hyderabad", "Area_Code": "35", "Population_Density": "4963", "Vehicles_Per_Hour": "626", "Traffic_Signals": "0", "Weather": "Fog", "Time_of_Day": "Morning", "Day_Type": "Weekday", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Kolkata", "Area_Code": "57", "Population_Density": "6897", "Vehicles_Per_Hour": "364", "Traffic_Signals": "10", "Weather": "Clear", "Time_of_Day": "Morning", "Day_Type": "Weekend", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Mumbai", "Area_Code": "61", "Population_Density": "9974", "Vehicles_Per_Hour": "803", "Traffic_Signals": "5", "Weather": "Clear", "Time_of_Day": "Afternoon", "Day_Type": "Weekday", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Ahmedabad", "Area_Code": "31", "Population_Density": "15377", "Vehicles_Per_Hour": "1109", "Traffic_Signals": "7", "Weather": "Rain", "Time_of_Day": "Night", "Day_Type": "Weekend", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Mumbai", "Area_Code": "53", "Population_Density": "18500", "Vehicles_Per_Hour": "1536", "Traffic_Signals": "0", "Weather": "Clear", "Time_of_Day": "Night", "Day_Type": "Weekend", "Road_Type": "Street", "Traffic_High": "0"}, {"City": "Ahmedabad", "Area_Code": "32", "Population_Density": "17056", "Vehicles_Per_Hour": "1837", "Traffic_Signals": "7", "Weather": "Clear", "Time_of_Day": "Night", "Day_Type": "Weekend", "Road_Type": "Main Road", "Traffic_High": "1"}, {"City": "Hyderabad", "Area_Code": "66", "Population_Density": "2750", "Vehicles_Per_Hour": "964", "Traffic_Signals": "6", "Weather": "Fog", "Time_of_Day": "Night", "Day_Type": "Weekday", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Jaipur", "Area_Code": "59", "Population_Density": "5027", "Vehicles_Per_Hour": "804", "Traffic_Signals": "0", "Weather": "Rain", "Time_of_Day": "Morning", "Day_Type": "Weekend", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Lucknow", "Area_Code": "10", "Population_Density": "12528", "Vehicles_Per_Hour": "603", "Traffic_Signals": "8", "Weather": "Fog", "Time_of_Day": "Evening", "Day_Type": "Weekday", "Road_Type": "Main Road", "Traffic_High": "1"}, {"City": "Pune", "Area_Code": "2", "Population_Density": "6745", "Vehicles_Per_Hour": "1654", "Traffic_Signals": "10", "Weather": "Clear", "Time_of_Day": "Evening", "Day_Type": "Weekday", "Road_Type": "Street", "Traffic_High": "1"}, {"City": "Jaipur", "Area_Code": "66", "Population_Density": "10679", "Vehicles_Per_Hour": "452", "Traffic_Signals": "2", "Weather": "Fog", "Time_of_Day": "Afternoon", "Day_Type": "Weekend", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Chennai", "Area_Code": "60", "Population_Density": "6938", "Vehicles_Per_Hour": "1180", "Traffic_Signals": "1", "Weather": "Rain", "Time_of_Day": "Morning", "Day_Type": "Weekday", "Road_Type": "Street", "Traffic_High": "0"}, {"City": "Mumbai", "Area_Code": "17", "Population_Density": "13150", "Vehicles_Per_Hour": "88", "Traffic_Signals": "6", "Weather": "Fog", "Time_of_Day": "Night", "Day_Type": "Weekday", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Chennai", "Area_Code": "16", "Population_Density": "14406", "Vehicles_Per_Hour": "630", "Traffic_Signals": "10", "Weather": "Clear", "Time_of_Day": "Night", "Day_Type": "Weekend", "Road_Type": "Street", "Traffic_High": "0"}, {"City": "Jaipur", "Area_Code": "16", "Population_Density": "18743", "Vehicles_Per_Hour": "229", "Traffic_Signals": "2", "Weather": "Fog", "Time_of_Day": "Evening", "Day_Type": "Weekday", "Road_Type": "Street", "Traffic_High": "1"}, {"City": "Ahmedabad", "Area_Code": "46", "Population_Density": "5853", "Vehicles_Per_Hour": "61", "Traffic_Signals": "0", "Weather": "Clear", "Time_of_Day": "Afternoon", "Day_Type": "Weekend", "Road_Type": "Street", "Traffic_High": "0"}, {"City": "Pune", "Area_Code": "39", "Population_Density": "19325", "Vehicles_Per_Hour": "1412", "Traffic_Signals": "9", "Weather": "Rain", "Time_of_Day": "Morning", "Day_Type": "Weekend", "Road_Type": "Street", "Traffic_High": "1"}, {"City": "Pune", "Area_Code": "31", "Population_Density": "4148", "Vehicles_Per_Hour": "992", "Traffic_Signals": "2", "Weather": "Rain", "Time_of_Day": "Afternoon", "Day_Type": "Weekday", "Road_Type": "Street", "Traffic_High": "0"}, {"City": "Delhi", "Area_Code": "1", "Population_Density": "17243", "Vehicles_Per_Hour": "1789", "Traffic_Signals": "5", "Weather": "Fog", "Time_of_Day": "Morning", "Day_Type": "Weekend", "Road_Type": "Street", "Traffic_High": "1"}, {"City": "Pune", "Area_Code": "11", "Population_Density": "8933", "Vehicles_Per_Hour": "597", "Traffic_Signals": "2", "Weather": "Rain", "Time_of_Day": "Afternoon", "Day_Type": "Weekend", "Road_Type": "Street", "Traffic_High": "0"}, {"City": "Lucknow", "Area_Code": "4", "Population_Density": "10436", "Vehicles_Per_Hour": "1199", "Traffic_Signals": "4", "Weather": "Fog", "Time_of_Day": "Afternoon", "Day_Type": "Weekday", "Road_Type": "Street", "Traffic_High": "1"}, {"City": "Pune", "Area_Code": "71", "Population_Density": "18669", "Vehicles_Per_Hour": "112", "Traffic_Signals": "8", "Weather": "Clear", "Time_of_Day": "Night", "Day_Type": "Weekday", "Road_Type": "Street", "Traffic_High": "0"}, {"City": "Jaipur", "Area_Code": "26", "Population_Density": "7474", "Vehicles_Per_Hour": "893", "Traffic_Signals": "6", "Weather": "Fog", "Time_of_Day": "Evening", "Day_Type": "Weekday", "Road_Type": "Highway", "Traffic_High": "1"}, {"City": "Delhi", "Area_Code": "50", "Population_Density": "15679", "Vehicles_Per_Hour": "1155", "Traffic_Signals": "1", "Weather": "Clear", "Time_of_Day": "Night", "Day_Type": "Weekday", "Road_Type": "Street", "Traffic_High": "0"}, {"City": "Jaipur", "Area_Code": "12", "Population_Density": "12228", "Vehicles_Per_Hour": "1058", "Traffic_Signals": "0", "Weather": "Rain", "Time_of_Day": "Evening", "Day_Type": "Weekend", "Road_Type": "Street", "Traffic_High": "1"}, {"City": "Jaipur", "Area_Code": "75", "Population_Density": "1770", "Vehicles_Per_Hour": "1892", "Traffic_Signals": "6", "Weather": "Clear", "Time_of_Day": "Afternoon", "Day_Type": "Weekend", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Bangalore", "Area_Code": "65", "Population_Density": "2843", "Vehicles_Per_Hour": "1372", "Traffic_Signals": "3", "Weather": "Clear", "Time_of_Day": "Morning", "Day_Type": "Weekend", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Delhi", "Area_Code": "47", "Population_Density": "1073", "Vehicles_Per_Hour": "83", "Traffic_Signals": "10", "Weather": "Clear", "Time_of_Day": "Night", "Day_Type": "Weekend", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Jaipur", "Area_Code": "53", "Population_Density": "19044", "Vehicles_Per_Hour": "801", "Traffic_Signals": "6", "Weather": "Clear", "Time_of_Day": "Morning", "Day_Type": "Weekend", "Road_Type": "Street", "Traffic_High": "1"}, {"City": "Bangalore", "Area_Code": "71", "Population_Density": "17059", "Vehicles_Per_Hour": "1682", "Traffic_Signals": "5", "Weather": "Clear", "Time_of_Day": "Night", "Day_Type": "Weekday", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Bangalore", "Area_Code": "2", "Population_Density": "9000", "Vehicles_Per_Hour": "98", "Traffic_Signals": "6", "Weather": "Fog", "Time_of_Day": "Night", "Day_Type": "Weekend", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Delhi", "Area_Code": "24", "Population_Density": "14273", "Vehicles_Per_Hour": "707", "Traffic_Signals": "3", "Weather": "Clear", "Time_of_Day": "Night", "Day_Type": "Weekend", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Chennai", "Area_Code": "4", "Population_Density": "17121", "Vehicles_Per_Hour": "1710", "Traffic_Signals": "2", "Weather": "Clear", "Time_of_Day": "Morning", "Day_Type": "Weekend", "Road_Type": "Main Road", "Traffic_High": "1"}, {"City": "Ahmedabad", "Area_Code": "19", "Population_Density": "1331", "Vehicles_Per_Hour": "750", "Traffic_Signals": "11", "Weather": "Clear", "Time_of_Day": "Night", "Day_Type": "Weekend", "Road_Type": "Street", "Traffic_High": "0"}, {"City": "Lucknow", "Area_Code": "26", "Population_Density": "18805", "Vehicles_Per_Hour": "1130", "Traffic_Signals": "4", "Weather": "Clear", "Time_of_Day": "Night", "Day_Type": "Weekday", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Ahmedabad", "Area_Code": "75", "Population_Density": "8512", "Vehicles_Per_Hour": "1934", "Traffic_Signals": "2", "Weather": "Clear", "Time_of_Day": "Night", "Day_Type": "Weekday", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Pune", "Area_Code": "40", "Population_Density": "5931", "Vehicles_Per_Hour": "158", "Traffic_Signals": "2", "Weather": "Clear", "Time_of_Day": "Morning", "Day_Type": "Weekday", "Road_Type": "Main Road", "Traffic_High": "0"}, {"City": "Lucknow", "Area_Code": "50", "Population_Density": "13742", "Vehicles_Per_Hour": "1590", "Traffic_Signals": "3", "Weather": "Rain", "Time_of_Day": "Night", "Day_Type": "Weekend", "Road_Type": "Highway", "Traffic_High": "0"}, {"City": "Pune", "Area_Code": "43", "Population_Density": "14426", "Vehicles_Per_Hour": "1034", "Traffic_Signals": "7", "Weather": "Fog", "Time_of_Day": "Morning", "Day_Type": "Weekend", "Road_Type": "Main Road", "Traffic_High": "1"}, {"City": "Jaipur", "Area_Code": "75", "Population_Density": "6113", "Vehicles_Per_Hour": "73", "Traffic_Signals": "1", "Weather": "Clear", "Time_of_Day": "Evening", "Day_Type": "Weekend", "Road_Type": "Main Road", "Traffic_High": "0"}],
+  crime: [{"City": "Hyderabad", "Area_Code": "47", "Population": "17928", "Unemployment_Rate": "6.94", "Police_Stations": "8", "Time": 22, "Victim_Age": "53", "Victim_Gender": "Male", "Weapon_Used": "None", "Past_Crime_Rate": "7", "Crime_Occurred": "0"}, {"City": "Chennai", "Area_Code": "46", "Population": "58002", "Unemployment_Rate": "17.87", "Police_Stations": "3", "Time": 22, "Victim_Age": "60", "Victim_Gender": "Male", "Weapon_Used": "Rod", "Past_Crime_Rate": "43", "Crime_Occurred": "1"}, {"City": "Jaipur", "Area_Code": "19", "Population": "94853", "Unemployment_Rate": "2.62", "Police_Stations": "6", "Time": 14, "Victim_Age": "39", "Victim_Gender": "Male", "Weapon_Used": "None", "Past_Crime_Rate": "39", "Crime_Occurred": "0"}, {"City": "Lucknow", "Area_Code": "13", "Population": "124614", "Unemployment_Rate": "4.05", "Police_Stations": "9", "Time": 18, "Victim_Age": "52", "Victim_Gender": "Male", "Weapon_Used": "Gun", "Past_Crime_Rate": "44", "Crime_Occurred": "0"}, {"City": "Hyderabad", "Area_Code": "42", "Population": "127517", "Unemployment_Rate": "5.59", "Police_Stations": "1", "Time": 18, "Victim_Age": "44", "Victim_Gender": "Male", "Weapon_Used": "Rod", "Past_Crime_Rate": "89", "Crime_Occurred": "1"}, {"City": "Bhopal", "Area_Code": "21", "Population": "166089", "Unemployment_Rate": "14.98", "Police_Stations": "3", "Time": 8, "Victim_Age": "46", "Victim_Gender": "Male", "Weapon_Used": "Gun", "Past_Crime_Rate": "26", "Crime_Occurred": "1"}, {"City": "Kolkata", "Area_Code": "37", "Population": "89064", "Unemployment_Rate": "16.06", "Police_Stations": "2", "Time": 18, "Victim_Age": "60", "Victim_Gender": "Female", "Weapon_Used": "Rod", "Past_Crime_Rate": "66", "Crime_Occurred": "1"}, {"City": "Hyderabad", "Area_Code": "27", "Population": "129694", "Unemployment_Rate": "3.14", "Police_Stations": "8", "Time": 22, "Victim_Age": "67", "Victim_Gender": "Male", "Weapon_Used": "Rod", "Past_Crime_Rate": "23", "Crime_Occurred": "0"}, {"City": "Jaipur", "Area_Code": "29", "Population": "154385", "Unemployment_Rate": "2.52", "Police_Stations": "6", "Time": 14, "Victim_Age": "54", "Victim_Gender": "Female", "Weapon_Used": "Gun", "Past_Crime_Rate": "18", "Crime_Occurred": "0"}, {"City": "Lucknow", "Area_Code": "20", "Population": "142631", "Unemployment_Rate": "13.91", "Police_Stations": "10", "Time": 22, "Victim_Age": "27", "Victim_Gender": "Male", "Weapon_Used": "None", "Past_Crime_Rate": "54", "Crime_Occurred": "0"}, {"City": "Chennai", "Area_Code": "25", "Population": "60893", "Unemployment_Rate": "4.13", "Police_Stations": "11", "Time": 22, "Victim_Age": "45", "Victim_Gender": "Male", "Weapon_Used": "Knife", "Past_Crime_Rate": "66", "Crime_Occurred": "0"}, {"City": "Jaipur", "Area_Code": "6", "Population": "25167", "Unemployment_Rate": "4.13", "Police_Stations": "11", "Time": 18, "Victim_Age": "68", "Victim_Gender": "Male", "Weapon_Used": "Rod", "Past_Crime_Rate": "91", "Crime_Occurred": "1"}, {"City": "Jaipur", "Area_Code": "36", "Population": "48598", "Unemployment_Rate": "2.36", "Police_Stations": "8", "Time": 14, "Victim_Age": "19", "Victim_Gender": "Female", "Weapon_Used": "Rod", "Past_Crime_Rate": "94", "Crime_Occurred": "1"}, {"City": "Kolkata", "Area_Code": "2", "Population": "148595", "Unemployment_Rate": "2.8", "Police_Stations": "2", "Time": 14, "Victim_Age": "45", "Victim_Gender": "Female", "Weapon_Used": "Knife", "Past_Crime_Rate": "47", "Crime_Occurred": "0"}, {"City": "Bangalore", "Area_Code": "22", "Population": "59777", "Unemployment_Rate": "6.22", "Police_Stations": "11", "Time": 22, "Victim_Age": "20", "Victim_Gender": "Male", "Weapon_Used": "None", "Past_Crime_Rate": "59", "Crime_Occurred": "0"}, {"City": "Lucknow", "Area_Code": "32", "Population": "169511", "Unemployment_Rate": "3.04", "Police_Stations": "6", "Time": 8, "Victim_Age": "31", "Victim_Gender": "Female", "Weapon_Used": "Knife", "Past_Crime_Rate": "44", "Crime_Occurred": "0"}, {"City": "Mumbai", "Area_Code": "16", "Population": "126378", "Unemployment_Rate": "7.9", "Police_Stations": "7", "Time": 18, "Victim_Age": "42", "Victim_Gender": "Male", "Weapon_Used": "None", "Past_Crime_Rate": "16", "Crime_Occurred": "0"}, {"City": "Jaipur", "Area_Code": "18", "Population": "91060", "Unemployment_Rate": "15.32", "Police_Stations": "8", "Time": 8, "Victim_Age": "19", "Victim_Gender": "Male", "Weapon_Used": "Rod", "Past_Crime_Rate": "69", "Crime_Occurred": "1"}, {"City": "Bangalore", "Area_Code": "5", "Population": "23285", "Unemployment_Rate": "7.22", "Police_Stations": "9", "Time": 22, "Victim_Age": "23", "Victim_Gender": "Female", "Weapon_Used": "Rod", "Past_Crime_Rate": "38", "Crime_Occurred": "0"}, {"City": "Mumbai", "Area_Code": "36", "Population": "152045", "Unemployment_Rate": "13.65", "Police_Stations": "5", "Time": 18, "Victim_Age": "63", "Victim_Gender": "Male", "Weapon_Used": "Gun", "Past_Crime_Rate": "87", "Crime_Occurred": "1"}, {"City": "Lucknow", "Area_Code": "30", "Population": "132970", "Unemployment_Rate": "3.5", "Police_Stations": "11", "Time": 8, "Victim_Age": "23", "Victim_Gender": "Male", "Weapon_Used": "None", "Past_Crime_Rate": "27", "Crime_Occurred": "0"}, {"City": "Delhi", "Area_Code": "45", "Population": "32694", "Unemployment_Rate": "12.55", "Police_Stations": "3", "Time": 8, "Victim_Age": "32", "Victim_Gender": "Female", "Weapon_Used": "Knife", "Past_Crime_Rate": "75", "Crime_Occurred": "1"}, {"City": "Bhopal", "Area_Code": "19", "Population": "176846", "Unemployment_Rate": "7.07", "Police_Stations": "2", "Time": 8, "Victim_Age": "61", "Victim_Gender": "Male", "Weapon_Used": "None", "Past_Crime_Rate": "11", "Crime_Occurred": "0"}, {"City": "Bangalore", "Area_Code": "23", "Population": "145374", "Unemployment_Rate": "14.0", "Police_Stations": "8", "Time": 18, "Victim_Age": "59", "Victim_Gender": "Male", "Weapon_Used": "None", "Past_Crime_Rate": "69", "Crime_Occurred": "1"}, {"City": "Patna", "Area_Code": "34", "Population": "163463", "Unemployment_Rate": "4.18", "Police_Stations": "1", "Time": 8, "Victim_Age": "18", "Victim_Gender": "Female", "Weapon_Used": "None", "Past_Crime_Rate": "22", "Crime_Occurred": "0"}, {"City": "Delhi", "Area_Code": "13", "Population": "14611", "Unemployment_Rate": "16.37", "Police_Stations": "10", "Time": 14, "Victim_Age": "42", "Victim_Gender": "Female", "Weapon_Used": "None", "Past_Crime_Rate": "12", "Crime_Occurred": "0"}, {"City": "Bhopal", "Area_Code": "43", "Population": "19372", "Unemployment_Rate": "5.88", "Police_Stations": "6", "Time": 22, "Victim_Age": "67", "Victim_Gender": "Male", "Weapon_Used": "Knife", "Past_Crime_Rate": "93", "Crime_Occurred": "1"}, {"City": "Kolkata", "Area_Code": "29", "Population": "165384", "Unemployment_Rate": "7.65", "Police_Stations": "2", "Time": 18, "Victim_Age": "49", "Victim_Gender": "Male", "Weapon_Used": "Gun", "Past_Crime_Rate": "46", "Crime_Occurred": "1"}, {"City": "Hyderabad", "Area_Code": "36", "Population": "155152", "Unemployment_Rate": "17.2", "Police_Stations": "3", "Time": 14, "Victim_Age": "60", "Victim_Gender": "Female", "Weapon_Used": "Rod", "Past_Crime_Rate": "91", "Crime_Occurred": "1"}, {"City": "Chennai", "Area_Code": "22", "Population": "90618", "Unemployment_Rate": "11.26", "Police_Stations": "8", "Time": 8, "Victim_Age": "36", "Victim_Gender": "Female", "Weapon_Used": "Knife", "Past_Crime_Rate": "5", "Crime_Occurred": "0"}, {"City": "Patna", "Area_Code": "47", "Population": "122945", "Unemployment_Rate": "7.85", "Police_Stations": "1", "Time": 22, "Victim_Age": "58", "Victim_Gender": "Male", "Weapon_Used": "Knife", "Past_Crime_Rate": "83", "Crime_Occurred": "1"}, {"City": "Kolkata", "Area_Code": "36", "Population": "118397", "Unemployment_Rate": "17.19", "Police_Stations": "6", "Time": 8, "Victim_Age": "39", "Victim_Gender": "Female", "Weapon_Used": "Rod", "Past_Crime_Rate": "19", "Crime_Occurred": "0"}, {"City": "Lucknow", "Area_Code": "9", "Population": "106213", "Unemployment_Rate": "7.27", "Police_Stations": "3", "Time": 14, "Victim_Age": "59", "Victim_Gender": "Female", "Weapon_Used": "Gun", "Past_Crime_Rate": "32", "Crime_Occurred": "0"}, {"City": "Kolkata", "Area_Code": "39", "Population": "30874", "Unemployment_Rate": "3.52", "Police_Stations": "6", "Time": 8, "Victim_Age": "65", "Victim_Gender": "Female", "Weapon_Used": "Knife", "Past_Crime_Rate": "40", "Crime_Occurred": "0"}, {"City": "Hyderabad", "Area_Code": "19", "Population": "142669", "Unemployment_Rate": "17.95", "Police_Stations": "3", "Time": 18, "Victim_Age": "56", "Victim_Gender": "Male", "Weapon_Used": "Rod", "Past_Crime_Rate": "50", "Crime_Occurred": "1"}, {"City": "Lucknow", "Area_Code": "38", "Population": "21600", "Unemployment_Rate": "6.29", "Police_Stations": "11", "Time": 14, "Victim_Age": "44", "Victim_Gender": "Male", "Weapon_Used": "Gun", "Past_Crime_Rate": "81", "Crime_Occurred": "1"}, {"City": "Patna", "Area_Code": "6", "Population": "144819", "Unemployment_Rate": "15.62", "Police_Stations": "11", "Time": 18, "Victim_Age": "54", "Victim_Gender": "Male", "Weapon_Used": "Gun", "Past_Crime_Rate": "25", "Crime_Occurred": "0"}, {"City": "Hyderabad", "Area_Code": "47", "Population": "89415", "Unemployment_Rate": "4.65", "Police_Stations": "8", "Time": 22, "Victim_Age": "21", "Victim_Gender": "Male", "Weapon_Used": "None", "Past_Crime_Rate": "53", "Crime_Occurred": "0"}, {"City": "Mumbai", "Area_Code": "15", "Population": "165887", "Unemployment_Rate": "13.7", "Police_Stations": "5", "Time": 18, "Victim_Age": "29", "Victim_Gender": "Male", "Weapon_Used": "Knife", "Past_Crime_Rate": "43", "Crime_Occurred": "1"}, {"City": "Chennai", "Area_Code": "20", "Population": "104348", "Unemployment_Rate": "10.39", "Police_Stations": "4", "Time": 18, "Victim_Age": "65", "Victim_Gender": "Female", "Weapon_Used": "Gun", "Past_Crime_Rate": "42", "Crime_Occurred": "1"}, {"City": "Patna", "Area_Code": "9", "Population": "115736", "Unemployment_Rate": "17.69", "Police_Stations": "9", "Time": 8, "Victim_Age": "29", "Victim_Gender": "Female", "Weapon_Used": "Knife", "Past_Crime_Rate": "13", "Crime_Occurred": "0"}, {"City": "Mumbai", "Area_Code": "32", "Population": "34714", "Unemployment_Rate": "10.85", "Police_Stations": "5", "Time": 8, "Victim_Age": "52", "Victim_Gender": "Female", "Weapon_Used": "Rod", "Past_Crime_Rate": "24", "Crime_Occurred": "0"}, {"City": "Bhopal", "Area_Code": "4", "Population": "159962", "Unemployment_Rate": "2.4", "Police_Stations": "4", "Time": 14, "Victim_Age": "67", "Victim_Gender": "Male", "Weapon_Used": "Knife", "Past_Crime_Rate": "88", "Crime_Occurred": "1"}, {"City": "Patna", "Area_Code": "18", "Population": "145797", "Unemployment_Rate": "11.66", "Police_Stations": "8", "Time": 22, "Victim_Age": "39", "Victim_Gender": "Male", "Weapon_Used": "Gun", "Past_Crime_Rate": "12", "Crime_Occurred": "0"}, {"City": "Bhopal", "Area_Code": "5", "Population": "184277", "Unemployment_Rate": "4.33", "Police_Stations": "8", "Time": 14, "Victim_Age": "28", "Victim_Gender": "Female", "Weapon_Used": "Rod", "Past_Crime_Rate": "18", "Crime_Occurred": "0"}, {"City": "Lucknow", "Area_Code": "20", "Population": "161756", "Unemployment_Rate": "14.78", "Police_Stations": "8", "Time": 22, "Victim_Age": "16", "Victim_Gender": "Female", "Weapon_Used": "Rod", "Past_Crime_Rate": "66", "Crime_Occurred": "1"}, {"City": "Mumbai", "Area_Code": "23", "Population": "198983", "Unemployment_Rate": "15.71", "Police_Stations": "4", "Time": 22, "Victim_Age": "27", "Victim_Gender": "Female", "Weapon_Used": "None", "Past_Crime_Rate": "88", "Crime_Occurred": "1"}, {"City": "Chennai", "Area_Code": "11", "Population": "121573", "Unemployment_Rate": "9.71", "Police_Stations": "1", "Time": 18, "Victim_Age": "66", "Victim_Gender": "Female", "Weapon_Used": "Rod", "Past_Crime_Rate": "39", "Crime_Occurred": "0"}, {"City": "Hyderabad", "Area_Code": "37", "Population": "23092", "Unemployment_Rate": "14.53", "Police_Stations": "2", "Time": 8, "Victim_Age": "57", "Victim_Gender": "Male", "Weapon_Used": "Gun", "Past_Crime_Rate": "59", "Crime_Occurred": "1"}, {"City": "Jaipur", "Area_Code": "22", "Population": "105918", "Unemployment_Rate": "4.32", "Police_Stations": "4", "Time": 22, "Victim_Age": "39", "Victim_Gender": "Male", "Weapon_Used": "None", "Past_Crime_Rate": "49", "Crime_Occurred": "0"}, {"City": "Kolkata", "Area_Code": "4", "Population": "180842", "Unemployment_Rate": "9.87", "Police_Stations": "10", "Time": 8, "Victim_Age": "52", "Victim_Gender": "Female", "Weapon_Used": "Gun", "Past_Crime_Rate": "25", "Crime_Occurred": "0"}, {"City": "Delhi", "Area_Code": "29", "Population": "35457", "Unemployment_Rate": "8.3", "Police_Stations": "2", "Time": 22, "Victim_Age": "35", "Victim_Gender": "Male", "Weapon_Used": "Gun", "Past_Crime_Rate": "57", "Crime_Occurred": "1"}, {"City": "Chennai", "Area_Code": "44", "Population": "81667", "Unemployment_Rate": "11.78", "Police_Stations": "11", "Time": 8, "Victim_Age": "21", "Victim_Gender": "Male", "Weapon_Used": "None", "Past_Crime_Rate": "58", "Crime_Occurred": "0"}, {"City": "Mumbai", "Area_Code": "34", "Population": "100751", "Unemployment_Rate": "2.71", "Police_Stations": "10", "Time": 14, "Victim_Age": "27", "Victim_Gender": "Male", "Weapon_Used": "None", "Past_Crime_Rate": "90", "Crime_Occurred": "0"}, {"City": "Jaipur", "Area_Code": "13", "Population": "72894", "Unemployment_Rate": "14.03", "Police_Stations": "3", "Time": 8, "Victim_Age": "36", "Victim_Gender": "Male", "Weapon_Used": "Knife", "Past_Crime_Rate": "47", "Crime_Occurred": "1"}, {"City": "Chennai", "Area_Code": "42", "Population": "71305", "Unemployment_Rate": "3.27", "Police_Stations": "9", "Time": 18, "Victim_Age": "18", "Victim_Gender": "Female", "Weapon_Used": "Gun", "Past_Crime_Rate": "10", "Crime_Occurred": "0"}, {"City": "Mumbai", "Area_Code": "9", "Population": "153684", "Unemployment_Rate": "12.5", "Police_Stations": "9", "Time": 22, "Victim_Age": "42", "Victim_Gender": "Female", "Weapon_Used": "Knife", "Past_Crime_Rate": "59", "Crime_Occurred": "1"}, {"City": "Bangalore", "Area_Code": "42", "Population": "178161", "Unemployment_Rate": "2.3", "Police_Stations": "11", "Time": 18, "Victim_Age": "61", "Victim_Gender": "Male", "Weapon_Used": "Rod", "Past_Crime_Rate": "48", "Crime_Occurred": "0"}, {"City": "Bangalore", "Area_Code": "31", "Population": "62137", "Unemployment_Rate": "15.31", "Police_Stations": "9", "Time": 22, "Victim_Age": "68", "Victim_Gender": "Female", "Weapon_Used": "Rod", "Past_Crime_Rate": "72", "Crime_Occurred": "1"}, {"City": "Bhopal", "Area_Code": "7", "Population": "10559", "Unemployment_Rate": "4.8", "Police_Stations": "7", "Time": 18, "Victim_Age": "51", "Victim_Gender": "Male", "Weapon_Used": "Knife", "Past_Crime_Rate": "8", "Crime_Occurred": "0"}, {"City": "Chennai", "Area_Code": "4", "Population": "76249", "Unemployment_Rate": "10.25", "Police_Stations": "4", "Time": 22, "Victim_Age": "32", "Victim_Gender": "Female", "Weapon_Used": "None", "Past_Crime_Rate": "67", "Crime_Occurred": "1"}, {"City": "Bangalore", "Area_Code": "19", "Population": "47361", "Unemployment_Rate": "6.18", "Police_Stations": "1", "Time": 8, "Victim_Age": "64", "Victim_Gender": "Female", "Weapon_Used": "Rod", "Past_Crime_Rate": "62", "Crime_Occurred": "0"}, {"City": "Mumbai", "Area_Code": "42", "Population": "90720", "Unemployment_Rate": "13.56", "Police_Stations": "3", "Time": 22, "Victim_Age": "61", "Victim_Gender": "Female", "Weapon_Used": "None", "Past_Crime_Rate": "58", "Crime_Occurred": "1"}, {"City": "Bhopal", "Area_Code": "30", "Population": "25261", "Unemployment_Rate": "7.14", "Police_Stations": "8", "Time": 18, "Victim_Age": "30", "Victim_Gender": "Female", "Weapon_Used": "Knife", "Past_Crime_Rate": "85", "Crime_Occurred": "1"}, {"City": "Mumbai", "Area_Code": "31", "Population": "30372", "Unemployment_Rate": "13.59", "Police_Stations": "4", "Time": 18, "Victim_Age": "54", "Victim_Gender": "Female", "Weapon_Used": "None", "Past_Crime_Rate": "42", "Crime_Occurred": "0"}, {"City": "Bhopal", "Area_Code": "35", "Population": "65355", "Unemployment_Rate": "6.56", "Police_Stations": "10", "Time": 22, "Victim_Age": "19", "Victim_Gender": "Female", "Weapon_Used": "Gun", "Past_Crime_Rate": "64", "Crime_Occurred": "1"}, {"City": "Chennai", "Area_Code": "21", "Population": "108560", "Unemployment_Rate": "14.04", "Police_Stations": "10", "Time": 22, "Victim_Age": "32", "Victim_Gender": "Female", "Weapon_Used": "Rod", "Past_Crime_Rate": "56", "Crime_Occurred": "1"}, {"City": "Jaipur", "Area_Code": "31", "Population": "198992", "Unemployment_Rate": "2.49", "Police_Stations": "2", "Time": 14, "Victim_Age": "53", "Victim_Gender": "Male", "Weapon_Used": "None", "Past_Crime_Rate": "33", "Crime_Occurred": "0"}, {"City": "Hyderabad", "Area_Code": "19", "Population": "173616", "Unemployment_Rate": "6.53", "Police_Stations": "8", "Time": 14, "Victim_Age": "26", "Victim_Gender": "Female", "Weapon_Used": "None", "Past_Crime_Rate": "44", "Crime_Occurred": "0"}, {"City": "Patna", "Area_Code": "31", "Population": "10037", "Unemployment_Rate": "9.98", "Police_Stations": "7", "Time": 8, "Victim_Age": "27", "Victim_Gender": "Male", "Weapon_Used": "Gun", "Past_Crime_Rate": "75", "Crime_Occurred": "1"}, {"City": "Jaipur", "Area_Code": "32", "Population": "184104", "Unemployment_Rate": "2.72", "Police_Stations": "11", "Time": 8, "Victim_Age": "62", "Victim_Gender": "Female", "Weapon_Used": "None", "Past_Crime_Rate": "12", "Crime_Occurred": "0"}, {"City": "Lucknow", "Area_Code": "2", "Population": "51420", "Unemployment_Rate": "4.98", "Police_Stations": "10", "Time": 8, "Victim_Age": "47", "Victim_Gender": "Female", "Weapon_Used": "Knife", "Past_Crime_Rate": "39", "Crime_Occurred": "0"}, {"City": "Mumbai", "Area_Code": "10", "Population": "107243", "Unemployment_Rate": "16.95", "Police_Stations": "9", "Time": 8, "Victim_Age": "42", "Victim_Gender": "Female", "Weapon_Used": "Knife", "Past_Crime_Rate": "86", "Crime_Occurred": "1"}, {"City": "Lucknow", "Area_Code": "2", "Population": "139380", "Unemployment_Rate": "17.63", "Police_Stations": "2", "Time": 8, "Victim_Age": "59", "Victim_Gender": "Male", "Weapon_Used": "Knife", "Past_Crime_Rate": "20", "Crime_Occurred": "0"}, {"City": "Jaipur", "Area_Code": "2", "Population": "44600", "Unemployment_Rate": "13.84", "Police_Stations": "5", "Time": 22, "Victim_Age": "58", "Victim_Gender": "Male", "Weapon_Used": "Rod", "Past_Crime_Rate": "22", "Crime_Occurred": "0"}, {"City": "Bhopal", "Area_Code": "24", "Population": "189357", "Unemployment_Rate": "6.04", "Police_Stations": "6", "Time": 14, "Victim_Age": "42", "Victim_Gender": "Male", "Weapon_Used": "None", "Past_Crime_Rate": "63", "Crime_Occurred": "0"}, {"City": "Patna", "Area_Code": "17", "Population": "99520", "Unemployment_Rate": "6.17", "Police_Stations": "2", "Time": 22, "Victim_Age": "64", "Victim_Gender": "Male", "Weapon_Used": "Rod", "Past_Crime_Rate": "93", "Crime_Occurred": "1"}, {"City": "Patna", "Area_Code": "32", "Population": "15167", "Unemployment_Rate": "12.33", "Police_Stations": "2", "Time": 14, "Victim_Age": "55", "Victim_Gender": "Male", "Weapon_Used": "Rod", "Past_Crime_Rate": "38", "Crime_Occurred": "0"}, {"City": "Delhi", "Area_Code": "16", "Population": "10432", "Unemployment_Rate": "3.88", "Police_Stations": "10", "Time": 14, "Victim_Age": "59", "Victim_Gender": "Female", "Weapon_Used": "None", "Past_Crime_Rate": "8", "Crime_Occurred": "0"}, {"City": "Patna", "Area_Code": "16", "Population": "79687", "Unemployment_Rate": "17.17", "Police_Stations": "4", "Time": 18, "Victim_Age": "44", "Victim_Gender": "Male", "Weapon_Used": "None", "Past_Crime_Rate": "73", "Crime_Occurred": "1"}, {"City": "Hyderabad", "Area_Code": "46", "Population": "81947", "Unemployment_Rate": "5.6", "Police_Stations": "8", "Time": 18, "Victim_Age": "24", "Victim_Gender": "Male", "Weapon_Used": "Knife", "Past_Crime_Rate": "82", "Crime_Occurred": "1"}, {"City": "Patna", "Area_Code": "39", "Population": "106324", "Unemployment_Rate": "17.99", "Police_Stations": "11", "Time": 14, "Victim_Age": "58", "Victim_Gender": "Male", "Weapon_Used": "Rod", "Past_Crime_Rate": "69", "Crime_Occurred": "1"}, {"City": "Jaipur", "Area_Code": "31", "Population": "60903", "Unemployment_Rate": "9.93", "Police_Stations": "5", "Time": 22, "Victim_Age": "18", "Victim_Gender": "Female", "Weapon_Used": "Rod", "Past_Crime_Rate": "65", "Crime_Occurred": "1"}, {"City": "Delhi", "Area_Code": "43", "Population": "195221", "Unemployment_Rate": "14.34", "Police_Stations": "9", "Time": 14, "Victim_Age": "54", "Victim_Gender": "Female", "Weapon_Used": "None", "Past_Crime_Rate": "90", "Crime_Occurred": "1"}, {"City": "Jaipur", "Area_Code": "24", "Population": "197840", "Unemployment_Rate": "2.03", "Police_Stations": "4", "Time": 8, "Victim_Age": "44", "Victim_Gender": "Female", "Weapon_Used": "Rod", "Past_Crime_Rate": "50", "Crime_Occurred": "0"}, {"City": "Jaipur", "Area_Code": "1", "Population": "75792", "Unemployment_Rate": "16.22", "Police_Stations": "3", "Time": 22, "Victim_Age": "36", "Victim_Gender": "Male", "Weapon_Used": "Gun", "Past_Crime_Rate": "25", "Crime_Occurred": "1"}, {"City": "Kolkata", "Area_Code": "11", "Population": "43439", "Unemployment_Rate": "6.32", "Police_Stations": "10", "Time": 22, "Victim_Age": "50", "Victim_Gender": "Female", "Weapon_Used": "None", "Past_Crime_Rate": "81", "Crime_Occurred": "0"}, {"City": "Delhi", "Area_Code": "21", "Population": "174329", "Unemployment_Rate": "12.69", "Police_Stations": "8", "Time": 14, "Victim_Age": "68", "Victim_Gender": "Male", "Weapon_Used": "Knife", "Past_Crime_Rate": "42", "Crime_Occurred": "0"}, {"City": "Jaipur", "Area_Code": "4", "Population": "185746", "Unemployment_Rate": "14.9", "Police_Stations": "1", "Time": 8, "Victim_Age": "63", "Victim_Gender": "Female", "Weapon_Used": "Gun", "Past_Crime_Rate": "77", "Crime_Occurred": "1"}, {"City": "Kolkata", "Area_Code": "7", "Population": "61248", "Unemployment_Rate": "4.63", "Police_Stations": "9", "Time": 14, "Victim_Age": "25", "Victim_Gender": "Female", "Weapon_Used": "Gun", "Past_Crime_Rate": "90", "Crime_Occurred": "1"}, {"City": "Kolkata", "Area_Code": "26", "Population": "186443", "Unemployment_Rate": "9.08", "Police_Stations": "4", "Time": 8, "Victim_Age": "38", "Victim_Gender": "Female", "Weapon_Used": "Knife", "Past_Crime_Rate": "85", "Crime_Occurred": "1"}, {"City": "Delhi", "Area_Code": "47", "Population": "178369", "Unemployment_Rate": "9.9", "Police_Stations": "11", "Time": 22, "Victim_Age": "54", "Victim_Gender": "Female", "Weapon_Used": "Gun", "Past_Crime_Rate": "64", "Crime_Occurred": "1"}, {"City": "Lucknow", "Area_Code": "12", "Population": "195345", "Unemployment_Rate": "6.99", "Police_Stations": "9", "Time": 14, "Victim_Age": "40", "Victim_Gender": "Female", "Weapon_Used": "Gun", "Past_Crime_Rate": "91", "Crime_Occurred": "1"}, {"City": "Bhopal", "Area_Code": "31", "Population": "44743", "Unemployment_Rate": "9.71", "Police_Stations": "8", "Time": 8, "Victim_Age": "39", "Victim_Gender": "Male", "Weapon_Used": "Gun", "Past_Crime_Rate": "40", "Crime_Occurred": "0"}, {"City": "Hyderabad", "Area_Code": "17", "Population": "89803", "Unemployment_Rate": "7.08", "Police_Stations": "3", "Time": 18, "Victim_Age": "35", "Victim_Gender": "Male", "Weapon_Used": "Rod", "Past_Crime_Rate": "10", "Crime_Occurred": "0"}, {"City": "Bhopal", "Area_Code": "33", "Population": "85117", "Unemployment_Rate": "7.77", "Police_Stations": "3", "Time": 22, "Victim_Age": "30", "Victim_Gender": "Female", "Weapon_Used": "Gun", "Past_Crime_Rate": "43", "Crime_Occurred": "1"}, {"City": "Patna", "Area_Code": "11", "Population": "32076", "Unemployment_Rate": "12.71", "Police_Stations": "9", "Time": 22, "Victim_Age": "36", "Victim_Gender": "Male", "Weapon_Used": "Gun", "Past_Crime_Rate": "33", "Crime_Occurred": "1"}, {"City": "Hyderabad", "Area_Code": "28", "Population": "97483", "Unemployment_Rate": "12.12", "Police_Stations": "3", "Time": 18, "Victim_Age": "68", "Victim_Gender": "Female", "Weapon_Used": "None", "Past_Crime_Rate": "31", "Crime_Occurred": "0"}, {"City": "Patna", "Area_Code": "32", "Population": "144035", "Unemployment_Rate": "5.72", "Police_Stations": "4", "Time": 8, "Victim_Age": "57", "Victim_Gender": "Female", "Weapon_Used": "Knife", "Past_Crime_Rate": "73", "Crime_Occurred": "1"}, {"City": "Jaipur", "Area_Code": "1", "Population": "129217", "Unemployment_Rate": "16.36", "Police_Stations": "9", "Time": 22, "Victim_Age": "27", "Victim_Gender": "Female", "Weapon_Used": "Rod", "Past_Crime_Rate": "13", "Crime_Occurred": "0"}],
+  citizen: [{"City": "Lucknow", "Age": "64", "Monthly_Income": "124641", "Education_Level": "Secondary", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "9.1", "Household_Size": "2", "Area_Type": "Urban", "Govt_Scheme_Usage": "1", "Citizen_Segment": "1"}, {"City": "Hyderabad", "Age": "63", "Monthly_Income": "137267", "Education_Level": "Postgraduate", "Employment_Type": "Private", "Digital_Usage_Hours": "5.68", "Household_Size": "1", "Area_Type": "Rural", "Govt_Scheme_Usage": "4", "Citizen_Segment": "1"}, {"City": "Jaipur", "Age": "69", "Monthly_Income": "58517", "Education_Level": "Secondary", "Employment_Type": "Government", "Digital_Usage_Hours": "9.28", "Household_Size": "7", "Area_Type": "Rural", "Govt_Scheme_Usage": "3", "Citizen_Segment": "1"}, {"City": "Chennai", "Age": "36", "Monthly_Income": "39012", "Education_Level": "Secondary", "Employment_Type": "Private", "Digital_Usage_Hours": "5.94", "Household_Size": "4", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "4", "Citizen_Segment": "0"}, {"City": "Lucknow", "Age": "30", "Monthly_Income": "147487", "Education_Level": "Secondary", "Employment_Type": "Government", "Digital_Usage_Hours": "1.16", "Household_Size": "1", "Area_Type": "Urban", "Govt_Scheme_Usage": "0", "Citizen_Segment": "1"}, {"City": "Ahmedabad", "Age": "59", "Monthly_Income": "26686", "Education_Level": "Primary", "Employment_Type": "Government", "Digital_Usage_Hours": "5.75", "Household_Size": "2", "Area_Type": "Urban", "Govt_Scheme_Usage": "0", "Citizen_Segment": "0"}, {"City": "Bangalore", "Age": "38", "Monthly_Income": "37161", "Education_Level": "Secondary", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "5.97", "Household_Size": "3", "Area_Type": "Rural", "Govt_Scheme_Usage": "2", "Citizen_Segment": "0"}, {"City": "Lucknow", "Age": "54", "Monthly_Income": "7402", "Education_Level": "Primary", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "2.54", "Household_Size": "3", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "2", "Citizen_Segment": "0"}, {"City": "Jaipur", "Age": "44", "Monthly_Income": "68190", "Education_Level": "Graduate", "Employment_Type": "Self-Employed", "Digital_Usage_Hours": "4.97", "Household_Size": "6", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "1", "Citizen_Segment": "1"}, {"City": "Chennai", "Age": "69", "Monthly_Income": "18275", "Education_Level": "Graduate", "Employment_Type": "Government", "Digital_Usage_Hours": "4.86", "Household_Size": "5", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "0", "Citizen_Segment": "1"}, {"City": "Hyderabad", "Age": "46", "Monthly_Income": "19915", "Education_Level": "Graduate", "Employment_Type": "Private", "Digital_Usage_Hours": "6.42", "Household_Size": "7", "Area_Type": "Urban", "Govt_Scheme_Usage": "1", "Citizen_Segment": "1"}, {"City": "Jaipur", "Age": "37", "Monthly_Income": "5909", "Education_Level": "Graduate", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "2.97", "Household_Size": "3", "Area_Type": "Urban", "Govt_Scheme_Usage": "1", "Citizen_Segment": "0"}, {"City": "Jaipur", "Age": "42", "Monthly_Income": "119110", "Education_Level": "Graduate", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "6.03", "Household_Size": "2", "Area_Type": "Rural", "Govt_Scheme_Usage": "4", "Citizen_Segment": "0"}, {"City": "Bangalore", "Age": "23", "Monthly_Income": "70908", "Education_Level": "Secondary", "Employment_Type": "Government", "Digital_Usage_Hours": "2.79", "Household_Size": "3", "Area_Type": "Rural", "Govt_Scheme_Usage": "2", "Citizen_Segment": "0"}, {"City": "Kolkata", "Age": "53", "Monthly_Income": "132337", "Education_Level": "Secondary", "Employment_Type": "Private", "Digital_Usage_Hours": "4.74", "Household_Size": "7", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "1", "Citizen_Segment": "1"}, {"City": "Chennai", "Age": "19", "Monthly_Income": "27620", "Education_Level": "Secondary", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "1.67", "Household_Size": "7", "Area_Type": "Rural", "Govt_Scheme_Usage": "1", "Citizen_Segment": "0"}, {"City": "Mumbai", "Age": "39", "Monthly_Income": "39112", "Education_Level": "Graduate", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "0.85", "Household_Size": "4", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "2", "Citizen_Segment": "0"}, {"City": "Jaipur", "Age": "49", "Monthly_Income": "7431", "Education_Level": "Graduate", "Employment_Type": "Private", "Digital_Usage_Hours": "3.55", "Household_Size": "1", "Area_Type": "Urban", "Govt_Scheme_Usage": "2", "Citizen_Segment": "0"}, {"City": "Kolkata", "Age": "33", "Monthly_Income": "91590", "Education_Level": "Primary", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "3.11", "Household_Size": "1", "Area_Type": "Rural", "Govt_Scheme_Usage": "0", "Citizen_Segment": "0"}, {"City": "Mumbai", "Age": "35", "Monthly_Income": "67175", "Education_Level": "Postgraduate", "Employment_Type": "Private", "Digital_Usage_Hours": "4.37", "Household_Size": "2", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "2", "Citizen_Segment": "1"}, {"City": "Chennai", "Age": "22", "Monthly_Income": "122472", "Education_Level": "Secondary", "Employment_Type": "Government", "Digital_Usage_Hours": "9.64", "Household_Size": "5", "Area_Type": "Urban", "Govt_Scheme_Usage": "4", "Citizen_Segment": "1"}, {"City": "Delhi", "Age": "53", "Monthly_Income": "37624", "Education_Level": "Postgraduate", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "5.46", "Household_Size": "7", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "0", "Citizen_Segment": "0"}, {"City": "Ahmedabad", "Age": "47", "Monthly_Income": "66264", "Education_Level": "Graduate", "Employment_Type": "Government", "Digital_Usage_Hours": "5.76", "Household_Size": "1", "Area_Type": "Rural", "Govt_Scheme_Usage": "1", "Citizen_Segment": "1"}, {"City": "Kolkata", "Age": "62", "Monthly_Income": "118766", "Education_Level": "Graduate", "Employment_Type": "Private", "Digital_Usage_Hours": "9.45", "Household_Size": "3", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "4", "Citizen_Segment": "1"}, {"City": "Pune", "Age": "36", "Monthly_Income": "137767", "Education_Level": "Graduate", "Employment_Type": "Government", "Digital_Usage_Hours": "9.25", "Household_Size": "7", "Area_Type": "Urban", "Govt_Scheme_Usage": "4", "Citizen_Segment": "1"}, {"City": "Delhi", "Age": "40", "Monthly_Income": "105211", "Education_Level": "Postgraduate", "Employment_Type": "Government", "Digital_Usage_Hours": "8.9", "Household_Size": "4", "Area_Type": "Rural", "Govt_Scheme_Usage": "0", "Citizen_Segment": "1"}, {"City": "Ahmedabad", "Age": "51", "Monthly_Income": "124502", "Education_Level": "Primary", "Employment_Type": "Government", "Digital_Usage_Hours": "1.43", "Household_Size": "5", "Area_Type": "Urban", "Govt_Scheme_Usage": "1", "Citizen_Segment": "0"}, {"City": "Bangalore", "Age": "30", "Monthly_Income": "49225", "Education_Level": "Graduate", "Employment_Type": "Self-Employed", "Digital_Usage_Hours": "6.53", "Household_Size": "5", "Area_Type": "Rural", "Govt_Scheme_Usage": "0", "Citizen_Segment": "1"}, {"City": "Lucknow", "Age": "60", "Monthly_Income": "137475", "Education_Level": "Primary", "Employment_Type": "Private", "Digital_Usage_Hours": "8.18", "Household_Size": "5", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "3", "Citizen_Segment": "1"}, {"City": "Hyderabad", "Age": "46", "Monthly_Income": "15839", "Education_Level": "Primary", "Employment_Type": "Private", "Digital_Usage_Hours": "8.44", "Household_Size": "1", "Area_Type": "Urban", "Govt_Scheme_Usage": "3", "Citizen_Segment": "0"}, {"City": "Pune", "Age": "53", "Monthly_Income": "145302", "Education_Level": "Secondary", "Employment_Type": "Private", "Digital_Usage_Hours": "5.99", "Household_Size": "6", "Area_Type": "Urban", "Govt_Scheme_Usage": "0", "Citizen_Segment": "1"}, {"City": "Bangalore", "Age": "39", "Monthly_Income": "56977", "Education_Level": "Postgraduate", "Employment_Type": "Private", "Digital_Usage_Hours": "0.67", "Household_Size": "5", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "1", "Citizen_Segment": "0"}, {"City": "Chennai", "Age": "69", "Monthly_Income": "118050", "Education_Level": "Graduate", "Employment_Type": "Private", "Digital_Usage_Hours": "9.75", "Household_Size": "2", "Area_Type": "Urban", "Govt_Scheme_Usage": "1", "Citizen_Segment": "1"}, {"City": "Bangalore", "Age": "69", "Monthly_Income": "30651", "Education_Level": "Primary", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "4.99", "Household_Size": "3", "Area_Type": "Urban", "Govt_Scheme_Usage": "2", "Citizen_Segment": "0"}, {"City": "Lucknow", "Age": "64", "Monthly_Income": "102919", "Education_Level": "Postgraduate", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "4.24", "Household_Size": "6", "Area_Type": "Urban", "Govt_Scheme_Usage": "4", "Citizen_Segment": "0"}, {"City": "Chennai", "Age": "53", "Monthly_Income": "44963", "Education_Level": "Postgraduate", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "4.25", "Household_Size": "4", "Area_Type": "Urban", "Govt_Scheme_Usage": "0", "Citizen_Segment": "0"}, {"City": "Pune", "Age": "26", "Monthly_Income": "122776", "Education_Level": "Graduate", "Employment_Type": "Government", "Digital_Usage_Hours": "4.53", "Household_Size": "3", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "4", "Citizen_Segment": "1"}, {"City": "Lucknow", "Age": "56", "Monthly_Income": "84198", "Education_Level": "Secondary", "Employment_Type": "Government", "Digital_Usage_Hours": "2.8", "Household_Size": "2", "Area_Type": "Urban", "Govt_Scheme_Usage": "4", "Citizen_Segment": "0"}, {"City": "Mumbai", "Age": "68", "Monthly_Income": "149811", "Education_Level": "Secondary", "Employment_Type": "Private", "Digital_Usage_Hours": "3.61", "Household_Size": "2", "Area_Type": "Urban", "Govt_Scheme_Usage": "3", "Citizen_Segment": "1"}, {"City": "Hyderabad", "Age": "36", "Monthly_Income": "135697", "Education_Level": "Primary", "Employment_Type": "Self-Employed", "Digital_Usage_Hours": "9.86", "Household_Size": "7", "Area_Type": "Urban", "Govt_Scheme_Usage": "3", "Citizen_Segment": "1"}, {"City": "Pune", "Age": "55", "Monthly_Income": "68294", "Education_Level": "Secondary", "Employment_Type": "Private", "Digital_Usage_Hours": "4.0", "Household_Size": "6", "Area_Type": "Rural", "Govt_Scheme_Usage": "0", "Citizen_Segment": "0"}, {"City": "Mumbai", "Age": "23", "Monthly_Income": "6789", "Education_Level": "Secondary", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "5.5", "Household_Size": "3", "Area_Type": "Rural", "Govt_Scheme_Usage": "0", "Citizen_Segment": "0"}, {"City": "Ahmedabad", "Age": "69", "Monthly_Income": "94297", "Education_Level": "Secondary", "Employment_Type": "Private", "Digital_Usage_Hours": "8.56", "Household_Size": "1", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "1", "Citizen_Segment": "1"}, {"City": "Pune", "Age": "64", "Monthly_Income": "123341", "Education_Level": "Postgraduate", "Employment_Type": "Government", "Digital_Usage_Hours": "5.51", "Household_Size": "7", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "0", "Citizen_Segment": "1"}, {"City": "Ahmedabad", "Age": "32", "Monthly_Income": "49135", "Education_Level": "Graduate", "Employment_Type": "Private", "Digital_Usage_Hours": "3.58", "Household_Size": "2", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "1", "Citizen_Segment": "0"}, {"City": "Chennai", "Age": "37", "Monthly_Income": "42067", "Education_Level": "Postgraduate", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "5.48", "Household_Size": "5", "Area_Type": "Urban", "Govt_Scheme_Usage": "1", "Citizen_Segment": "1"}, {"City": "Mumbai", "Age": "26", "Monthly_Income": "22357", "Education_Level": "Postgraduate", "Employment_Type": "Private", "Digital_Usage_Hours": "1.58", "Household_Size": "4", "Area_Type": "Rural", "Govt_Scheme_Usage": "0", "Citizen_Segment": "0"}, {"City": "Hyderabad", "Age": "49", "Monthly_Income": "43262", "Education_Level": "Graduate", "Employment_Type": "Government", "Digital_Usage_Hours": "1.74", "Household_Size": "4", "Area_Type": "Rural", "Govt_Scheme_Usage": "1", "Citizen_Segment": "0"}, {"City": "Lucknow", "Age": "21", "Monthly_Income": "63643", "Education_Level": "Postgraduate", "Employment_Type": "Self-Employed", "Digital_Usage_Hours": "7.09", "Household_Size": "2", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "4", "Citizen_Segment": "1"}, {"City": "Jaipur", "Age": "67", "Monthly_Income": "96270", "Education_Level": "Primary", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "9.22", "Household_Size": "5", "Area_Type": "Rural", "Govt_Scheme_Usage": "1", "Citizen_Segment": "0"}, {"City": "Bangalore", "Age": "35", "Monthly_Income": "143761", "Education_Level": "Primary", "Employment_Type": "Private", "Digital_Usage_Hours": "7.39", "Household_Size": "3", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "4", "Citizen_Segment": "1"}, {"City": "Delhi", "Age": "22", "Monthly_Income": "74103", "Education_Level": "Postgraduate", "Employment_Type": "Government", "Digital_Usage_Hours": "1.21", "Household_Size": "4", "Area_Type": "Urban", "Govt_Scheme_Usage": "4", "Citizen_Segment": "0"}, {"City": "Hyderabad", "Age": "37", "Monthly_Income": "91268", "Education_Level": "Secondary", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "4.33", "Household_Size": "5", "Area_Type": "Rural", "Govt_Scheme_Usage": "4", "Citizen_Segment": "0"}, {"City": "Mumbai", "Age": "40", "Monthly_Income": "91310", "Education_Level": "Postgraduate", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "0.52", "Household_Size": "5", "Area_Type": "Urban", "Govt_Scheme_Usage": "2", "Citizen_Segment": "0"}, {"City": "Jaipur", "Age": "28", "Monthly_Income": "42412", "Education_Level": "Secondary", "Employment_Type": "Government", "Digital_Usage_Hours": "5.36", "Household_Size": "1", "Area_Type": "Urban", "Govt_Scheme_Usage": "2", "Citizen_Segment": "1"}, {"City": "Hyderabad", "Age": "54", "Monthly_Income": "52734", "Education_Level": "Postgraduate", "Employment_Type": "Private", "Digital_Usage_Hours": "2.34", "Household_Size": "2", "Area_Type": "Rural", "Govt_Scheme_Usage": "1", "Citizen_Segment": "0"}, {"City": "Mumbai", "Age": "39", "Monthly_Income": "92793", "Education_Level": "Primary", "Employment_Type": "Private", "Digital_Usage_Hours": "8.75", "Household_Size": "5", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "0", "Citizen_Segment": "1"}, {"City": "Kolkata", "Age": "21", "Monthly_Income": "27228", "Education_Level": "Secondary", "Employment_Type": "Private", "Digital_Usage_Hours": "1.49", "Household_Size": "7", "Area_Type": "Rural", "Govt_Scheme_Usage": "1", "Citizen_Segment": "0"}, {"City": "Kolkata", "Age": "46", "Monthly_Income": "125627", "Education_Level": "Primary", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "0.51", "Household_Size": "3", "Area_Type": "Urban", "Govt_Scheme_Usage": "2", "Citizen_Segment": "0"}, {"City": "Ahmedabad", "Age": "61", "Monthly_Income": "82924", "Education_Level": "Postgraduate", "Employment_Type": "Self-Employed", "Digital_Usage_Hours": "4.79", "Household_Size": "4", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "3", "Citizen_Segment": "1"}, {"City": "Hyderabad", "Age": "51", "Monthly_Income": "16319", "Education_Level": "Graduate", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "1.98", "Household_Size": "7", "Area_Type": "Urban", "Govt_Scheme_Usage": "3", "Citizen_Segment": "0"}, {"City": "Kolkata", "Age": "30", "Monthly_Income": "11475", "Education_Level": "Secondary", "Employment_Type": "Private", "Digital_Usage_Hours": "7.51", "Household_Size": "1", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "1", "Citizen_Segment": "0"}, {"City": "Mumbai", "Age": "59", "Monthly_Income": "34545", "Education_Level": "Secondary", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "9.24", "Household_Size": "3", "Area_Type": "Rural", "Govt_Scheme_Usage": "2", "Citizen_Segment": "0"}, {"City": "Ahmedabad", "Age": "26", "Monthly_Income": "101636", "Education_Level": "Postgraduate", "Employment_Type": "Self-Employed", "Digital_Usage_Hours": "0.9", "Household_Size": "4", "Area_Type": "Urban", "Govt_Scheme_Usage": "4", "Citizen_Segment": "0"}, {"City": "Mumbai", "Age": "59", "Monthly_Income": "35615", "Education_Level": "Postgraduate", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "4.26", "Household_Size": "2", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "2", "Citizen_Segment": "0"}, {"City": "Ahmedabad", "Age": "48", "Monthly_Income": "18746", "Education_Level": "Secondary", "Employment_Type": "Government", "Digital_Usage_Hours": "9.97", "Household_Size": "3", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "1", "Citizen_Segment": "1"}, {"City": "Hyderabad", "Age": "24", "Monthly_Income": "6245", "Education_Level": "Graduate", "Employment_Type": "Private", "Digital_Usage_Hours": "7.46", "Household_Size": "4", "Area_Type": "Rural", "Govt_Scheme_Usage": "2", "Citizen_Segment": "0"}, {"City": "Jaipur", "Age": "21", "Monthly_Income": "122408", "Education_Level": "Postgraduate", "Employment_Type": "Private", "Digital_Usage_Hours": "9.56", "Household_Size": "1", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "3", "Citizen_Segment": "1"}, {"City": "Lucknow", "Age": "36", "Monthly_Income": "117143", "Education_Level": "Postgraduate", "Employment_Type": "Private", "Digital_Usage_Hours": "2.06", "Household_Size": "7", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "4", "Citizen_Segment": "0"}, {"City": "Pune", "Age": "59", "Monthly_Income": "32632", "Education_Level": "Postgraduate", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "2.6", "Household_Size": "4", "Area_Type": "Urban", "Govt_Scheme_Usage": "1", "Citizen_Segment": "0"}, {"City": "Jaipur", "Age": "47", "Monthly_Income": "17856", "Education_Level": "Graduate", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "1.97", "Household_Size": "5", "Area_Type": "Rural", "Govt_Scheme_Usage": "1", "Citizen_Segment": "0"}, {"City": "Chennai", "Age": "48", "Monthly_Income": "73049", "Education_Level": "Secondary", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "3.37", "Household_Size": "1", "Area_Type": "Rural", "Govt_Scheme_Usage": "0", "Citizen_Segment": "0"}, {"City": "Mumbai", "Age": "52", "Monthly_Income": "63182", "Education_Level": "Primary", "Employment_Type": "Private", "Digital_Usage_Hours": "7.38", "Household_Size": "3", "Area_Type": "Urban", "Govt_Scheme_Usage": "4", "Citizen_Segment": "0"}, {"City": "Chennai", "Age": "38", "Monthly_Income": "138873", "Education_Level": "Postgraduate", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "2.07", "Household_Size": "6", "Area_Type": "Urban", "Govt_Scheme_Usage": "1", "Citizen_Segment": "1"}, {"City": "Jaipur", "Age": "48", "Monthly_Income": "60654", "Education_Level": "Graduate", "Employment_Type": "Private", "Digital_Usage_Hours": "5.48", "Household_Size": "2", "Area_Type": "Urban", "Govt_Scheme_Usage": "2", "Citizen_Segment": "1"}, {"City": "Ahmedabad", "Age": "36", "Monthly_Income": "60381", "Education_Level": "Secondary", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "3.06", "Household_Size": "7", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "2", "Citizen_Segment": "0"}, {"City": "Pune", "Age": "48", "Monthly_Income": "63601", "Education_Level": "Secondary", "Employment_Type": "Private", "Digital_Usage_Hours": "8.38", "Household_Size": "1", "Area_Type": "Rural", "Govt_Scheme_Usage": "2", "Citizen_Segment": "1"}, {"City": "Pune", "Age": "49", "Monthly_Income": "5364", "Education_Level": "Graduate", "Employment_Type": "Government", "Digital_Usage_Hours": "0.56", "Household_Size": "7", "Area_Type": "Rural", "Govt_Scheme_Usage": "2", "Citizen_Segment": "0"}, {"City": "Delhi", "Age": "19", "Monthly_Income": "12436", "Education_Level": "Postgraduate", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "2.62", "Household_Size": "1", "Area_Type": "Rural", "Govt_Scheme_Usage": "1", "Citizen_Segment": "0"}, {"City": "Pune", "Age": "69", "Monthly_Income": "91713", "Education_Level": "Primary", "Employment_Type": "Private", "Digital_Usage_Hours": "6.25", "Household_Size": "1", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "3", "Citizen_Segment": "0"}, {"City": "Lucknow", "Age": "27", "Monthly_Income": "65194", "Education_Level": "Postgraduate", "Employment_Type": "Government", "Digital_Usage_Hours": "1.42", "Household_Size": "4", "Area_Type": "Rural", "Govt_Scheme_Usage": "4", "Citizen_Segment": "0"}, {"City": "Pune", "Age": "19", "Monthly_Income": "29544", "Education_Level": "Secondary", "Employment_Type": "Government", "Digital_Usage_Hours": "4.93", "Household_Size": "5", "Area_Type": "Rural", "Govt_Scheme_Usage": "2", "Citizen_Segment": "0"}, {"City": "Jaipur", "Age": "19", "Monthly_Income": "68295", "Education_Level": "Primary", "Employment_Type": "Self-Employed", "Digital_Usage_Hours": "4.64", "Household_Size": "6", "Area_Type": "Rural", "Govt_Scheme_Usage": "1", "Citizen_Segment": "0"}, {"City": "Delhi", "Age": "41", "Monthly_Income": "148710", "Education_Level": "Postgraduate", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "8.6", "Household_Size": "2", "Area_Type": "Rural", "Govt_Scheme_Usage": "1", "Citizen_Segment": "1"}, {"City": "Jaipur", "Age": "34", "Monthly_Income": "74409", "Education_Level": "Primary", "Employment_Type": "Private", "Digital_Usage_Hours": "6.44", "Household_Size": "7", "Area_Type": "Urban", "Govt_Scheme_Usage": "2", "Citizen_Segment": "0"}, {"City": "Jaipur", "Age": "49", "Monthly_Income": "131839", "Education_Level": "Graduate", "Employment_Type": "Self-Employed", "Digital_Usage_Hours": "6.58", "Household_Size": "2", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "0", "Citizen_Segment": "1"}, {"City": "Bangalore", "Age": "33", "Monthly_Income": "118759", "Education_Level": "Postgraduate", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "9.54", "Household_Size": "5", "Area_Type": "Rural", "Govt_Scheme_Usage": "1", "Citizen_Segment": "1"}, {"City": "Delhi", "Age": "33", "Monthly_Income": "22157", "Education_Level": "Secondary", "Employment_Type": "Government", "Digital_Usage_Hours": "9.83", "Household_Size": "4", "Area_Type": "Rural", "Govt_Scheme_Usage": "4", "Citizen_Segment": "1"}, {"City": "Jaipur", "Age": "63", "Monthly_Income": "70888", "Education_Level": "Secondary", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "6.71", "Household_Size": "4", "Area_Type": "Rural", "Govt_Scheme_Usage": "4", "Citizen_Segment": "0"}, {"City": "Bangalore", "Age": "56", "Monthly_Income": "69947", "Education_Level": "Primary", "Employment_Type": "Private", "Digital_Usage_Hours": "5.46", "Household_Size": "5", "Area_Type": "Rural", "Govt_Scheme_Usage": "0", "Citizen_Segment": "0"}, {"City": "Bangalore", "Age": "48", "Monthly_Income": "75880", "Education_Level": "Graduate", "Employment_Type": "Government", "Digital_Usage_Hours": "6.28", "Household_Size": "7", "Area_Type": "Rural", "Govt_Scheme_Usage": "1", "Citizen_Segment": "1"}, {"City": "Delhi", "Age": "60", "Monthly_Income": "9507", "Education_Level": "Postgraduate", "Employment_Type": "Self-Employed", "Digital_Usage_Hours": "4.13", "Household_Size": "5", "Area_Type": "Urban", "Govt_Scheme_Usage": "0", "Citizen_Segment": "1"}, {"City": "Chennai", "Age": "41", "Monthly_Income": "108134", "Education_Level": "Graduate", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "9.88", "Household_Size": "3", "Area_Type": "Urban", "Govt_Scheme_Usage": "1", "Citizen_Segment": "1"}, {"City": "Ahmedabad", "Age": "18", "Monthly_Income": "48988", "Education_Level": "Graduate", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "7.2", "Household_Size": "4", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "1", "Citizen_Segment": "0"}, {"City": "Lucknow", "Age": "28", "Monthly_Income": "103421", "Education_Level": "Primary", "Employment_Type": "Self-Employed", "Digital_Usage_Hours": "3.26", "Household_Size": "7", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "0", "Citizen_Segment": "0"}, {"City": "Ahmedabad", "Age": "38", "Monthly_Income": "107591", "Education_Level": "Primary", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "1.05", "Household_Size": "1", "Area_Type": "Rural", "Govt_Scheme_Usage": "3", "Citizen_Segment": "0"}, {"City": "Pune", "Age": "21", "Monthly_Income": "134614", "Education_Level": "Postgraduate", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "0.92", "Household_Size": "2", "Area_Type": "Rural", "Govt_Scheme_Usage": "2", "Citizen_Segment": "0"}, {"City": "Lucknow", "Age": "24", "Monthly_Income": "32213", "Education_Level": "Secondary", "Employment_Type": "Unemployed", "Digital_Usage_Hours": "2.45", "Household_Size": "4", "Area_Type": "Urban", "Govt_Scheme_Usage": "2", "Citizen_Segment": "0"}, {"City": "Pune", "Age": "43", "Monthly_Income": "62450", "Education_Level": "Postgraduate", "Employment_Type": "Government", "Digital_Usage_Hours": "2.71", "Household_Size": "5", "Area_Type": "Semi-Urban", "Govt_Scheme_Usage": "2", "Citizen_Segment": "1"}, {"City": "Jaipur", "Age": "64", "Monthly_Income": "140549", "Education_Level": "Graduate", "Employment_Type": "Government", "Digital_Usage_Hours": "4.44", "Household_Size": "1", "Area_Type": "Rural", "Govt_Scheme_Usage": "0", "Citizen_Segment": "1"}]
+};
+
+function randomSample(form) {
+  const rows = DS[form];
+  const idx = Math.floor(Math.random() * rows.length);
+  const r = rows[idx];
+  const badge = document.getElementById(form + 'RowBadge');
+  if(badge) badge.textContent = 'ROW #' + (idx+1) + ' / ' + rows.length;
+
+  if(form === 'house') {
+    document.getElementById('houseSqft').value = r.Square_Footage;
+    document.getElementById('houseBeds').value = r.Num_Bedrooms;
+    document.getElementById('houseBaths').value = r.Num_Bathrooms;
+    document.getElementById('houseLot').value = parseFloat(r.Lot_Size).toFixed(2);
+    document.getElementById('houseQuality').value = r.Neighborhood_Quality;
+  } else if(form === 'traffic') {
+    document.getElementById('trafficCity').value = r.City;
+    document.getElementById('trafficAreaCode').value = r.Area_Code;
+    document.getElementById('trafficPopDensity').value = r.Population_Density;
+    document.getElementById('trafficVehicles').value = r.Vehicles_Per_Hour;
+    document.getElementById('trafficSignals').value = r.Traffic_Signals;
+    document.getElementById('trafficWeather').value = r.Weather;
+    document.getElementById('trafficTime').value = r.Time_of_Day;
+    document.getElementById('trafficDayType').value = r.Day_Type;
+    document.getElementById('trafficRoadType').value = r.Road_Type;
+  } else if(form === 'crime') {
+    document.getElementById('crimeCity').value = r.City;
+    document.getElementById('crimeAreaCode').value = r.Area_Code;
+    document.getElementById('crimePopulation').value = r.Population;
+    document.getElementById('crimeUnemployment').value = r.Unemployment_Rate;
+    document.getElementById('crimePoliceStations').value = r.Police_Stations;
+    document.getElementById('crimeTime').value = r.Time;
+    document.getElementById('crimeVictimAge').value = r.Victim_Age;
+    document.getElementById('crimeVictimGender').value = r.Victim_Gender;
+    // Map weapon
+    const wMap = {'None':'None','Gun':'Gun','Knife':'Knife','Rod':'Other','Axe':'Other','Pipe':'Other','Bottle':'Other'};
+    document.getElementById('crimeWeapon').value = wMap[r.Weapon_Used] || 'Other';
+    document.getElementById('crimePastRate').value = r.Past_Crime_Rate;
+  } else if(form === 'citizen') {
+    document.getElementById('citizenCity').value = r.City;
+    document.getElementById('citizenAge').value = r.Age;
+    document.getElementById('citizenIncome').value = r.Monthly_Income;
+    // Map education
+    const eduMap = {'Primary':'Secondary','Secondary':'Secondary','Graduate':'Graduate','Postgraduate':'Postgraduate'};
+    document.getElementById('citizenEdu').value = eduMap[r.Education_Level] || 'Secondary';
+    // Map employment
+    const empMap = {'Private':'Private','Government':'Government','Unemployed':'Unemployed','Self-Employed':'Private'};
+    document.getElementById('citizenEmp').value = empMap[r.Employment_Type] || 'Private';
+    document.getElementById('citizenDigital').value = parseFloat(r.Digital_Usage_Hours).toFixed(1);
+    document.getElementById('citizenHousehold').value = r.Household_Size;
+    document.getElementById('citizenArea').value = r.Area_Type;
+    document.getElementById('citizenScheme').value = r.Govt_Scheme_Usage;
+  }
+}
+
+/* SIDEBAR TOGGLE */
+function toggleSidebar(){
+  const sb=document.getElementById('sidebar');
+  const ov=document.getElementById('sidebarOverlay');
+  const ico=document.getElementById('hamburgerIcon');
+  const open=sb.classList.toggle('open');
+  ov.classList.toggle('active',open);
+  ico.className=open?'fas fa-times':'fas fa-bars';
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('active');
+  document.getElementById('hamburgerIcon').className='fas fa-bars';
+}
+// Close sidebar on nav item click (mobile)
+document.querySelectorAll('.nav-item').forEach(el=>{
+  el.addEventListener('click',()=>{if(window.innerWidth<=640)closeSidebar();});
+});
+
+/* PARTICLES */
+const cv=document.getElementById('particles'),cx=cv.getContext('2d');
+let pts=[];
+function resize(){cv.width=innerWidth;cv.height=innerHeight;}
+resize();window.addEventListener('resize',resize);
+function initPts(){
+  pts=[];
+  for(let i=0;i<70;i++)pts.push({x:Math.random()*cv.width,y:Math.random()*cv.height,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,r:Math.random()*1.2+.4,type:Math.floor(Math.random()*3)});
+}
+initPts();
+function drawPts(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  pts.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0||p.x>cv.width)p.vx*=-1;
+    if(p.y<0||p.y>cv.height)p.vy*=-1;
+    const colors=['rgba(2,132,199,0.3)','rgba(124,58,237,0.2)','rgba(5,150,105,0.25)'];
+    cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    cx.fillStyle=colors[p.type];cx.fill();
+  });
+  pts.forEach((a,i)=>pts.slice(i+1).forEach(b=>{
+    const d=Math.hypot(a.x-b.x,a.y-b.y);
+    if(d<100){
+      cx.beginPath();cx.moveTo(a.x,a.y);cx.lineTo(b.x,b.y);
+      cx.strokeStyle=`rgba(2,132,199,${.06*(1-d/100)})`;cx.lineWidth=.5;cx.stroke();
+    }
+  }));
+  requestAnimationFrame(drawPts);
+}
+drawPts();
+</script>
+</body>
+</html>
