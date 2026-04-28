@@ -13,7 +13,7 @@
 
 ## 📌 Project Overview
 
-**Smart City AI** is an IoT-based Machine Learning project that uses real-world urban data to make intelligent predictions across 4 domains. It features a futuristic Cyberpunk-themed dashboard connected to a Flask REST API backend with pre-trained ML models.
+Smart City Analytic System is a Machine Learning based system that analyzes urban data and provides intelligent predictions across multiple domains.
 
 ---
 
@@ -81,7 +81,7 @@ IIOT4-MACHINE-LEARNING/
 │       └── label_encoders.pkl
 │
 ├── Frontend/
-│   └── 2model_workinghtml.html  # Cyberpunk Dashboard UI
+│   └── index.html (Main Dashboard UI)
 │
 ├── CITIZEN SEGMENTATION/
 │   ├── Citizen_Segmentation.ipynb
