@@ -119,7 +119,7 @@ python app.py
 Server will start at: `http://localhost:5000`
 
 ### Step 3 — Open Frontend
-Open `Frontend/2model_workinghtml.html` in your browser.
+Open `Frontend/index.html` in your browser.
 
 > ⚠️ Make sure backend is running before opening the frontend!
 
