@@ -1,7 +1,6 @@
 # IIOT4-MACHINE-LEARNING
 # 🏙️ SMART CITY ANALYTIC SYSTEM 
 
-> **Neural Network Powered Urban Intelligence System v2.0**  
 > Real-time predictions for Traffic, Crime, House Prices & Citizen Segmentation
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue?style=for-the-badge&logo=python)
